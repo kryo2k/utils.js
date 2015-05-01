@@ -1,7 +1,12 @@
-## utils.js
+## utilities.js
 Simple collection of functions and algorithms for Javascript/NodeJS without any other dependencies.
 
 *Currently only supports node.js, but can be easilly ported to any framework.*
+
+### NodeJS Installation
+```bash
+npm install utilities.js
+```
 
 ### Public Methods:
 | Function Name  | Arguments | Description |
@@ -44,7 +49,7 @@ Adding a property to a class which has no type-checking (pass thru).
 
 ```js
 var
-utils = require('utils.js');
+utils = require('utilities.js');
 
 var // @private
 PROP_VALUE = '_value'; // Can also be a symbol. @see Symbol()

@@ -1,5 +1,5 @@
 {
-  "name": "utils.js",
+  "name": "utilities.js",
   "version": "1.0.0",
   "description": "A small collection of useful algorithms and type-checking functions.",
   "main": "index.js",
