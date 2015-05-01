@@ -1,0 +1,30 @@
+{
+  "name": "utils.js",
+  "version": "1.0.0",
+  "description": "A small collection of useful algorithms and type-checking functions.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node test/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kryo2k/utils.js.git"
+  },
+  "keywords": [
+    "nodejs",
+    "utilities",
+    "framework-agnostic"
+  ],
+  "author": "Hans Doller <kryo2k@gmail.com>",
+  "license": "GPLv2",
+  "bugs": {
+    "url": "https://github.com/kryo2k/utils.js/issues"
+  },
+  "homepage": "https://github.com/kryo2k/utils.js",
+  "devDependencies": {
+    "chai": "^2.3.0"
+  }
+}
