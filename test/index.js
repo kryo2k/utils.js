@@ -411,3 +411,7 @@ console.log('Testing: setterScalar..');
 
 // TFN: setterObject
 console.log('Testing: setterObject..');
+
+// test readme examples
+require('./example-myvalue');
+require('./example-waittime');
