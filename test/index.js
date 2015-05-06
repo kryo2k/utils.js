@@ -4,6 +4,7 @@ var
 chai = require('chai'),
 expect = chai.expect,
 Assertion = chai.Assertion,
+HashMap = require('hashmap'),
 utils = require('../index');
 
 Assertion.addMethod('nan', function (type) {
@@ -65,6 +66,24 @@ expect([ // test false conditions
   Infinity,
   NaN
 ].map(utils.isUndefined))
+  .to.not.contain(true);
+
+// TFN: isNullUndefined
+console.log('Testing: isNullUndefined..');
+
+expect([ // test true conditions
+  undefined,
+  null
+].map(utils.isNullUndefined))
+  .to.not.contain(false);
+
+expect([ // test false conditions
+  false,
+  '',
+  Infinity,
+  NaN,
+  new Date
+].map(utils.isNullUndefined))
   .to.not.contain(true);
 
 // TFN: isNumber
@@ -321,6 +340,71 @@ expect(utils.range(1, 5, 1)).to.eql([1, 2, 3, 4, 5]);
 expect(utils.range(0, 6, 2)).to.eql([0, 2, 4, 6]);
 expect(utils.range(0, 1, 0.25, 2)).to.eql([0, 0.25, 0.5, 0.75, 1]);
 
+// TFN: objectHasProperty
+console.log('Testing: objectHasProperty..');
+
+expect(utils.objectHasProperty()).to.eql(false);
+expect(utils.objectHasProperty({ key: true }, 'key')).to.eql(true);
+expect(utils.objectHasProperty({ key: true }, 'key1')).to.eql(false);
+
+// TFN: objectGetValue
+console.log('Testing: objectGetValue..');
+
+expect(utils.objectGetValue()).to.eql(undefined);
+expect(utils.objectGetValue({ key: true }, 'key')).to.eql(true);
+expect(utils.objectGetValue({ key: true }, 'key1')).to.eql(undefined);
+expect(utils.objectGetValue({ key: true }, 'key1', false)).to.eql(false);
+
+var
+testObject = {};
+testObject[undefined] = true;
+testObject[null]      = true;
+
+expect(utils.objectGetValue(testObject, undefined, false)).to.eql(true);
+expect(utils.objectGetValue(testObject, null, false)).to.eql(true);
+
+// TFN: objectSetValue
+console.log('Testing: objectSetValue..');
+
+expect(utils.objectSetValue()).to.eql(false);
+expect(utils.objectSetValue({})).to.eql(true); // sets object[undefined] = undefined;
+expect(utils.objectSetValue(testObject, undefined, false, true)).to.eql(false);
+expect(utils.objectSetValue(testObject, null, false, true)).to.eql(false);
+
+// TFN: range
+console.log('Testing: objectFind..');
+
+expect(utils.objectFind()).to.eql(undefined);
+expect(utils.objectFind({}, null)).to.eql(undefined);
+expect(utils.objectFind({}, null, null)).to.eql(null);
+expect(utils.objectFind({}, null, false)).to.eql(false);
+expect(utils.objectFind({key: true}, 'key')).to.eql(true);
+expect(utils.objectFind({key: undefined}, 'key', false)).to.eql(undefined);
+expect(utils.objectFind({key1: { key2: true}}, 'key1.key2')).to.eql(true);
+expect(utils.objectFind({key1: { key2: true}}, ['key1','key2'])).to.eql(true);
+expect(utils.objectFind({key1: { key2: { key3: true }}}, 'key1.key2.key3')).to.eql(true);
+expect(utils.objectFind({key1: { key2: { key3: true }}}, ['key1','key2','key3'])).to.eql(true);
+expect(utils.objectFind({key1: { key2: { key3: true }}}, 'keyX.key2.key3')).to.eql(undefined);
+expect(utils.objectFind({key1: { key2: { key3: true }}}, 'key1.keyX.key3')).to.eql(undefined);
+expect(utils.objectFind({key1: { key2: { key3: true }}}, 'key1.key2.keyX')).to.eql(undefined);
+expect(utils.objectFind({key1: { key2: { key3: true }}}, 'keyX.key2.key3', false)).to.eql(false);
+expect(utils.objectFind({key1: { key2: { key3: true }}}, 'key1.keyX.key3', false)).to.eql(false);
+expect(utils.objectFind({key1: { key2: { key3: true }}}, 'key1.key2.keyX', false)).to.eql(false);
+expect(utils.objectFind({'key1.key2': true}, 'key1.key2')).to.eql(undefined);
+expect(utils.objectFind({'key1.key2': true}, 'key1.key2', false, false)).to.eql(true);
+
+var
+testKey1 = '1', testVal1 = 'something',
+testKey2 = 1,   testVal2 = 'something else',
+testMap  = new HashMap(testKey1, testVal1, testKey2, testVal2),
+testMixed = { key: new HashMap(testMap, testMap) };
+
+expect(utils.objectFind(testMap, testKey1)).to.eql(testVal1);
+expect(utils.objectFind(testMap, testKey2)).to.eql(testVal2);
+
+expect(utils.objectFind(testMixed, ['key', testMap, testKey1])).to.eql(testVal1);
+expect(utils.objectFind(testMixed, ['key', testMap, testKey2])).to.eql(testVal2);
+
 // TFN: getter
 console.log('Testing: getter..');
 
@@ -403,8 +487,52 @@ console.log('Testing: setterNumber..');
 // TFN: setterInt
 console.log('Testing: setterInt..');
 
+[0, -1, 1].forEach(function (v) { // all-integer conditions
+  var prop = 'test', scope = {};
+  expect(utils.setterInt(prop).call(scope, v)).to.equal(v);
+  expect(scope[prop]).to.equal(v);
+});
+
+[0, -1, 1, Infinity].forEach(function (v) { // all-number (including infinity) conditions
+  var prop = 'test', scope = {};
+  expect(utils.setterInt(prop, null, null, true).call(scope, v)).to.equal(v);
+  expect(scope[prop]).to.equal(v);
+});
+
+[null, NaN, Infinity, false, true, ''].forEach(function (v) { // blocked conditions
+  var
+  prop = 'test',
+  defValue = 0,
+  scope = {};
+  scope[prop] = defValue;
+  expect(utils.setterInt(prop).call(scope, v)).to.equal(defValue);
+  expect(scope[prop]).to.equal(defValue);
+});
+
 // TFN: setterString
 console.log('Testing: setterString..');
+
+['', ' ', 'hello'].forEach(function (v) { // all-string conditions
+  var prop = 'test', scope = {};
+  expect(utils.setterString(prop).call(scope, v)).to.equal(v);
+  expect(scope[prop]).to.equal(v);
+});
+
+['', ' ', null].forEach(function (v) { // all-string conditions including null
+  var prop = 'test', scope = {};
+  expect(utils.setterString(prop, true).call(scope, v)).to.equal(v);
+  expect(scope[prop]).to.equal(v);
+});
+
+[null, NaN, Infinity, false, true, new Date].forEach(function (v) { // blocked conditions
+  var
+  prop = 'test',
+  defValue = 'string',
+  scope = {};
+  scope[prop] = defValue;
+  expect(utils.setterString(prop).call(scope, v)).to.equal(defValue);
+  expect(scope[prop]).to.equal(defValue);
+});
 
 // TFN: setterScalar
 console.log('Testing: setterScalar..');
@@ -412,6 +540,8 @@ console.log('Testing: setterScalar..');
 // TFN: setterObject
 console.log('Testing: setterObject..');
 
+// TFN: setterFunction
+console.log('Testing: setterFunction..');
+
 // test readme examples
 require('./example-myvalue');
-require('./example-waittime');

@@ -6,40 +6,46 @@ Simple collection of functions and algorithms for Javascript/NodeJS without any 
 ### NodeJS Installation
 ```bash
 npm install utilities.js
+npm test
 ```
 
 ### Public Methods:
-| Function Name  | Arguments | Description |
-| -------------- | --------- | ----------- |
-| noop           | *none*     | NO-OP function. Returns undefined. |
-| noopPassThru   | (passThru) | NO-OP function. Returns first argument. |
-| isNull         | (variable) | Checks if a variable is null. |
-| isUndefined    | (variable) | Checks if a variable is undefined. |
-| isNumber       | (variable) | Checks if a variable is strictly a number. |
-| isBoolean      | (variable) | Checks if a variable is strictly a boolean. |
-| isString       | (variable) | Checks if a variable is strictly a string. |
-| isScalar       | (variable) | Checks if a variable is a scalar of type (number, boolean, string). NULL and Undefined are not permitted. |
-| isFunction     | (variable) | Checks if a variable is strictly a function. |
-| isArray        | (variable) | Checks if a variable is strictly an array  |
-| isPrimitive    | (variable) | Identical to isScalar(), but permits undefined. |
-| isPlainObject  | (variable) | Checks if a variable is strictly an instance of Object (or {}). Complex objects (Date, Array) will fail check. |
-| isObject       | (variable) | Checks if a variable is any type of object (plain, or otherwise). |
-| asNumber       | (variable, default) | Returns a variable in it's numeric form, or returns the supplied default (if a number is provided, else zero) if not a valid string or number. |
-| round          | (number, precision) | Rounding function, with optional precision. Returns NaN if not a valid number. |
-| clamp          | (number, min, max, precision) | Ensures a number is between a certain range with an optional precision. |
-| logscale       | (n, nMin, nMax, vMin, vMax, precision) | Scales a number logarithmically. |
-| linearscale    | (n, nMin, nMax, vMin, vMax, precision) | Scales a number linearlly. |
-| random         | (min, max, precision) | Produces a random number between a certain range with an optional precision. |
-| range          | (from, to, step, precision) | Produce an array of integers within a certain range. Optional step size, and precision. |
-| getter         | (property, getterFn) | Returns a getter function. See more detail below. |
-| setter         | (property, allowNull, setterFn) | Returns a setter function. ^ ditto. |
-| setterBoolean  | (property, allowNull, setterFn) | Returns a boolean setter function. If value passed to function is not a boolean, property does not get set in scope. |
-| setterNumber   | (property, min, max, precision, allowInfinite, allowNull, setterFn) | Returns a number setter function. If value passed to function is not a number, property does not get set in scope. Supports clamping, and precision. |
-| setterInt      | (property, min, max, allowInfinite, allowNull, setterFn) | Returns a number setter function, which supports clamping, but precision is always 0 (whole numbers). |
-| setterString   | (property, allowNull, setterFn) | Returns a string setter function. |
-| setterScalar   | (property, allowNull, setterFn) | Returns a scalar setter function. |
-| setterObject   | (property, instanceOf, allowNull, setterFn) | Returns an object setter function, with optional instance checking. |
-| setterFunction | (property, allowNull, setterFn) | Returns a function setter function. |
+| Function Name     | Arguments | Description |
+| ----------------- | --------- | ----------- |
+| noop              | *none*     | NO-OP function. Returns undefined. |
+| noopPassThru      | (passThru) | NO-OP function. Returns first argument. |
+| isNull            | (variable) | Checks if a variable is null. |
+| isUndefined       | (variable) | Checks if a variable is undefined. |
+| isNullUndefined   | (variable) | Checks if a variable is null or undefined. |
+| isNumber          | (variable) | Checks if a variable is strictly a number. |
+| isBoolean         | (variable) | Checks if a variable is strictly a boolean. |
+| isString          | (variable) | Checks if a variable is strictly a string. |
+| isScalar          | (variable) | Checks if a variable is a scalar of type (number, boolean, string). NULL and Undefined are not permitted. |
+| isFunction        | (variable) | Checks if a variable is strictly a function. |
+| isArray           | (variable) | Checks if a variable is strictly an array  |
+| isPrimitive       | (variable) | Identical to isScalar(), but permits undefined. |
+| isPlainObject     | (variable) | Checks if a variable is strictly an instance of Object (or {}). Complex objects (Date, Array) will fail check. |
+| isObject          | (variable) | Checks if a variable is any type of object (plain, or otherwise). |
+| asNumber          | (variable, default) | Returns a variable in it's numeric form, or returns the supplied default (if a number is provided, else zero) if not a valid string or number. |
+| round             | (number, precision) | Rounding function, with optional precision. Returns NaN if not a valid number. |
+| clamp             | (number, min, max, precision) | Ensures a number is between a certain range with an optional precision. |
+| logscale          | (n, nMin, nMax, vMin, vMax, precision) | Scales a number logarithmically. |
+| linearscale       | (n, nMin, nMax, vMin, vMax, precision) | Scales a number linearlly. |
+| random            | (min, max, precision) | Produces a random number between a certain range with an optional precision. |
+| range             | (from, to, step, precision) | Produce an array of integers within a certain range. Optional step size, and precision. |
+| objectHasProperty | (obj, property) | Virtually the same as ```Object.hasOwnProperty```, but checks to see if object has a ```has(property)``` function. If it does, it calls it and checks if the result is a boolean. If so, returns the boolean, otherwise in all cases falls back to the native hasOwnProperty method. If obj is not an object, returns ```false```. This function is compatible with ```HashMap``` style objects. |
+| objectGetValue    | (obj, property, defaultValue) | Gets a single object property value, with the option of providing a default value which is returned if the ```objectHasProperty```  check fails. This function also checks to see if a ```get(property)``` method exists. If so, it calls that function and returns it's value. Otherwise, falls back to returning the object's property using native JS. This function is compatible with ```HashMap``` style objects. |
+| objectSetValue    | (obj, property, value, rejectOverride) | Sets a single object property value, with the option of skipping the update if already set. Overriding is allowed by default, to disable set rejectOverride to ```true```. This function is compatible with ```HashMap``` style objects. |
+| objectFind        | (obj, search, defaultValue, searchDelimiter) | Similar to the objectGetValue function, but search can be defined as a delimited string, or as an array. This search acts like a property path to find an object's value or the value of one of it's child keys. To disable deep searching on string keys, set searchDelimiter to ```false```.  The default searchDelimiter is a period (```.```) character. This function is compatible with ```HashMap``` style objects. |
+| getter            | (property, getterFn) | Returns a getter function. See more detail below. |
+| setter            | (property, allowNull, setterFn) | Returns a setter function. ^ ditto. |
+| setterBoolean     | (property, allowNull, setterFn) | Returns a boolean setter function. If value passed to function is not a boolean, property does not get set in scope. |
+| setterNumber      | (property, min, max, precision, allowInfinite, allowNull, setterFn) | Returns a number setter function. If value passed to function is not a number, property does not get set in scope. Supports clamping, and precision. |
+| setterInt         | (property, min, max, allowInfinite, allowNull, setterFn) | Returns a number setter function, which supports clamping, but precision is always 0 (whole numbers). |
+| setterString      | (property, allowNull, setterFn) | Returns a string setter function. |
+| setterScalar      | (property, allowNull, setterFn) | Returns a scalar setter function. |
+| setterObject      | (property, instanceOf, allowNull, setterFn) | Returns an object setter function, with optional instance checking. |
+| setterFunction    | (property, allowNull, setterFn) | Returns a function setter function. |
 
 ### Getters & Setters
 When prototyping classes in pure JS, these functions are useful when defining method properties of the class' prototype. Here are some examples:

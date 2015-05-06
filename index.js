@@ -12,6 +12,10 @@ function isUndefined(v) {
   return v === undefined;
 }
 
+function isNullUndefined(v) {
+  return isNull(v) || isUndefined(v);
+}
+
 function isString(v) {
   return typeof(v) === 'string';
 }
@@ -180,6 +184,104 @@ function range(from, to, step, precision) {
   return arr;
 }
 
+function objectHasProperty(obj, property) {
+  if(!isObject(obj)) {
+    return false;
+  }
+
+  if(isFunction(obj.has)) {
+    var hasReturned = obj.has(property);
+    return isBoolean(hasReturned)
+      // we got a boolean back
+      ? hasReturned
+      // fall back to native
+      : obj.hasOwnProperty(property);
+  }
+
+  return obj.hasOwnProperty(property);
+}
+
+function objectGetValue(obj, property, defaultValue) {
+  if(!objectHasProperty(obj, property)) {
+    return defaultValue;
+  }
+
+  if(isFunction(obj.get)) {
+    return obj.get(property);
+  }
+
+  return obj[property];
+}
+
+function objectSetValue(obj, property, value, rejectOverride) {
+  if(!isObject(obj) || (!!rejectOverride && objectHasProperty(obj, property))) {
+    return false;
+  }
+
+  if(isFunction(obj.set)) {
+    obj.set(property, value);
+  }
+  else {
+    obj[property] = value;
+  }
+
+  return true;
+}
+
+function objectFind(obj, search, defaultValue, searchDelimiter) {
+  if(!isObject(obj)) {
+    return defaultValue;
+  }
+
+  searchDelimiter = (searchDelimiter === undefined || searchDelimiter === true)
+    ? '.'
+    : searchDelimiter;
+
+  var
+  applyValue = defaultValue,
+  deepSearch = null;
+
+  if(isString(search) && isString(searchDelimiter) && search.indexOf(searchDelimiter) > -1) {
+    deepSearch = search.split(searchDelimiter);
+  }
+  else if(isArray(search)) {
+    deepSearch = search;
+  }
+
+  if(!isNull(deepSearch)) { // deep search property path array
+    var
+    nsTotal = deepSearch.length,
+    nsTotalIndexes = nsTotal - 1,
+    index = 0, root = obj;
+
+    if(nsTotal === 0) {
+      return defaultValue;
+    }
+
+    for(;;) { // loop thru path of properties
+      search = deepSearch[index];
+      root = objectGetValue(root, search, applyValue);
+
+      if(index === nsTotalIndexes) { // end of query check:
+        applyValue = root;
+        break;
+      }
+
+      if(isObject(root)) { // next iteration
+        index++;
+        continue;
+      }
+      else // invalid type of deep searchable.
+        break;
+    }
+  }
+  else { // treat search as a property
+    applyValue = objectGetValue(obj, search, applyValue);
+  }
+
+  return applyValue;
+}
+
 function getter(prop, cb) {
   cb = cb || noopPassThru;
   return function () {
@@ -201,25 +303,19 @@ function setter(prop, allowNull, cb) {
 }
 
 function setterBoolean(prop, allowNull, cb) { // strictly set booleans
-  var msetter = setter(prop, allowNull, cb);
-  return function (v) {
-    if(allowNull && isNull(v)) {
-      return msetter.call(this, v);
-    }
-
-    if(isBoolean(v)) {
-      return msetter.call(this, v);
+  return setter(prop, allowNull, function (v) {
+    if(isBoolean(v) || (!!allowNull && isNull(v))) {
+      return v;
     }
 
     return this[prop];
-  };
+  });
 }
 
 function setterNumber(prop, min, max, precision, allowInfinite, allowNull, cb) {
-  var msetter = setter(prop, allowNull, cb);
-  return function (v) {
+  return setter(prop, allowNull, function (v) {
     if(allowNull && isNull(v)) {
-      return msetter.call(this, v);
+      return v;
     }
 
     if(!allowInfinite && !isFinite(v)) {
@@ -227,11 +323,11 @@ function setterNumber(prop, min, max, precision, allowInfinite, allowNull, cb) {
     }
 
     if(isNumber(v)) {
-      return msetter.call(this, clamp(v, min, max, precision));
+      return clamp(v, min, max, precision);
     }
 
     return this[prop];
-  };
+  });
 }
 
 function setterInt(prop, min, max, allowInfinite, allowNull, cb) { // strictly set integers (rounds floats to zero precision)
@@ -239,18 +335,13 @@ function setterInt(prop, min, max, allowInfinite, allowNull, cb) { // strictly s
 }
 
 function setterString(prop, allowNull, cb) {
-  var msetter = setter(prop, allowNull, cb);
-  return function (v) {
-    if(allowNull && isNull(v)) {
-      return msetter.call(this, v);
-    }
-
-    if(isString(v)) {
-      return msetter.call(this, v);
+  return setter(prop, allowNull, function (v) {
+    if(isString(v) || (allowNull && isNull(v))) {
+      return v;
     }
 
     return this[prop];
-  };
+  });
 }
 
 function setterScalar(prop, allowNull, cb) {
@@ -307,6 +398,7 @@ module.exports = {
   noopPassThru: noopPassThru,
   isNull: isNull,
   isUndefined: isUndefined,
+  isNullUndefined: isNullUndefined,
   isNumber: isNumber,
   isBoolean: isBoolean,
   isString: isString,
@@ -323,6 +415,10 @@ module.exports = {
   linearscale: linearscale,
   random: random,
   range: range,
+  objectHasProperty: objectHasProperty,
+  objectGetValue: objectGetValue,
+  objectSetValue: objectSetValue,
+  objectFind: objectFind,
   getter: getter,
   setter: setter,
   setterBoolean: setterBoolean,
