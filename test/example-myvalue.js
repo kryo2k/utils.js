@@ -27,8 +27,6 @@ Object.defineProperties(MyValue.prototype, {
 
 ///// end example
 
-console.log('Testing example MyValue..');
-
 var
 myValueObj = new MyValue(),
 testValues = [null, undefined, '1', 1, false, {}, new Date()];

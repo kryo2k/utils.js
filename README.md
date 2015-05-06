@@ -9,7 +9,13 @@ npm install utilities.js
 npm test
 ```
 
-### Public Methods:
+### NodeJS Usage
+```js
+var
+utils = require('utilities.js');
+```
+
+### Methods:
 | Function Name     | Arguments | Description |
 | ----------------- | --------- | ----------- |
 | noop              | *none*     | NO-OP function. Returns undefined. |
@@ -25,8 +31,18 @@ npm test
 | isArray           | (variable) | Checks if a variable is strictly an array  |
 | isPrimitive       | (variable) | Identical to isScalar(), but permits undefined. |
 | isPlainObject     | (variable) | Checks if a variable is strictly an instance of Object (or {}). Complex objects (Date, Array) will fail check. |
+| isObjectType      | (string)   | Checks a string if it matches the native object type string ```"object"```.
 | isObject          | (variable) | Checks if a variable is any type of object (plain, or otherwise). |
+| isDate            | (variable) | Checks if a variable is specifically a Date object. |
 | asNumber          | (variable, default) | Returns a variable in it's numeric form, or returns the supplied default (if a number is provided, else zero) if not a valid string or number. |
+| asBoolean         | (variable, default) | Returns variable as a strict boolean type. If variable is ```null``` or ```undefined``` it will return the default value if it is a boolean, otherwise returns ```false```. If variable is an integer, it must equal exactly ```1``` to return ```true```, otherwise returns ```false```. If variable is a string, it must be one of (```yes```, ```true```, ```1```, ```on```, ```enabled```, ```enable```) to return ```true```, otherwise returns ```false```. If none of the above cases match, it will return default value (or ```false```). |
+| asString          | (variable, default) | Returns variable as a strict string type. If variable is ```null``` or ```undefined``` it will return the default value if it is a string, otherwise returns ```""```. If variable is already a string, it returns the original string. Otherwise variable is cast directly to a string, using the native ```String(variable)```. |
+| asDate            | (variable, default) | Returns a variable as a strict date object type.  |
+| dateSetHours      | (now, hours, minutes, seconds, milliseconds, useUTC, fallbackDate) | Sets the hour portion of a date. Returns a new copy of the ```now``` after interpolation date. If ```now``` could not be loaded, the fallbackDate is used for setting hours. *Warning, no copy is made of the fallbackDate if used, this operation will change it's internal values.* |
+| dateNow           | (variable, fallbackDate) | If variable is a real date object, it returns a new copy of the date object. If variable is a finite number or a string, it attempts to load it as a sanitized date. If it could be loaded, the newly interpolated copy is returned. In any other case, it will return the same instance of fallbackDate (if it is a real date object, or a new Date if otherwise). |
+| dateEquals        | (date1, date2, fallbackDate)) | Compares value of date1 with date2 value to see if they match. This was not meant to detect if they are the exact same object instance, only that the values are equal. If either of the dates are ```NULL``` or ```undefined``` the function returns ```false```. If they could not be loaded (invalid String, Number, etc), the fallbackDate (or a new Date) is used in determining equality. |
+| dateFloor         | (now, useUTC, fallbackDate) | Returns a copy of ```now``` with the time set to be the beginning of the day (example: "00:00:00.000"). *See above note about using fallbackDate if now fails to load.* |
+| dateCeil          | (now, useUTC, fallbackDate) | Returns a copy of ```now``` with the time set to be the end of the day (example: "23:59:59.999"). *See above note about using fallbackDate if now fails to load.* |
 | round             | (number, precision) | Rounding function, with optional precision. Returns NaN if not a valid number. |
 | clamp             | (number, min, max, precision) | Ensures a number is between a certain range with an optional precision. |
 | logscale          | (n, nMin, nMax, vMin, vMax, precision) | Scales a number logarithmically. |
@@ -44,8 +60,9 @@ npm test
 | setterInt         | (property, min, max, allowInfinite, allowNull, setterFn) | Returns a number setter function, which supports clamping, but precision is always 0 (whole numbers). |
 | setterString      | (property, allowNull, setterFn) | Returns a string setter function. |
 | setterScalar      | (property, allowNull, setterFn) | Returns a scalar setter function. |
-| setterObject      | (property, instanceOf, allowNull, setterFn) | Returns an object setter function, with optional instance checking. |
 | setterFunction    | (property, allowNull, setterFn) | Returns a function setter function. |
+| setterObject      | (property, instanceOf, allowNull, setterFn) | Returns an object setter function, with optional instance checking. |
+| setterDate        | (property, allowNull, setterFn) | ... |
 
 ### Getters & Setters
 When prototyping classes in pure JS, these functions are useful when defining method properties of the class' prototype. Here are some examples:
