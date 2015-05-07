@@ -426,9 +426,10 @@
   }
 
   function setterBoolean(prop, allowNull, cb) { // strictly set booleans
+    cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
       if(isBoolean(v) || (!!allowNull && isNull(v))) {
-        return v;
+        return cb.call(this, v);
       }
 
       return this[prop];
@@ -436,9 +437,10 @@
   }
 
   function setterNumber(prop, min, max, precision, allowInfinite, allowNull, cb) {
+    cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
       if(allowNull && isNull(v)) {
-        return v;
+        return cb.call(this, v);
       }
 
       if(!allowInfinite && !isFinite(v)) {
@@ -446,7 +448,7 @@
       }
 
       if(isNumber(v)) {
-        return clamp(v, min, max, precision);
+        return cb.call(this, clamp(v, min, max, precision));
       }
 
       return this[prop];
@@ -458,9 +460,10 @@
   }
 
   function setterString(prop, allowNull, cb) {
+    cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
       if(isString(v) || (allowNull && isNull(v))) {
-        return v;
+        return cb.call(this, v);
       }
 
       return this[prop];
@@ -468,9 +471,10 @@
   }
 
   function setterScalar(prop, allowNull, cb) {
+    cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
       if(isScalar(v) || (allowNull && isNull(v))) {
-        return v;
+        return cb.call(this, v);
       }
 
       return this[prop];
@@ -478,9 +482,10 @@
   }
 
   function setterFunction(prop, allowNull, cb) {
+    cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
       if(isFunction(v) || (allowNull && isNull(v))) {
-        return v;
+        return cb.call(this, v);
       }
 
       return this[prop];
@@ -488,22 +493,23 @@
   }
 
   function setterObject(prop, instanceCheck, allowNull, cb) {
+    cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
       if(allowNull && isNull(v)) {
-        return v;
+        return cb.call(this, v);
       }
 
       if(isObject(v)) {
         if(isFunction(instanceCheck)) { // enfore instanceof checking
           if(v instanceof instanceCheck) {
-            return v;
+            return cb.call(this, v);
           }
           else {
             return this[prop];
           }
         }
 
-        return v;
+        return cb.call(this, v);
       }
 
       return this[prop];
@@ -511,9 +517,10 @@
   }
 
   function setterDate(prop, minDate, maxDate, allowNull, cb) {
+    cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
       if(allowNull && isNull(v)) {
-        return v;
+        return cb.call(this, v);
       }
 
       var date = false;
@@ -530,7 +537,7 @@
       }
 
       // return a final clamped date copy
-      return clampDate(date, minDate, maxDate);
+      return cb.call(this, clampDate(date, minDate, maxDate));
     });
   }
 

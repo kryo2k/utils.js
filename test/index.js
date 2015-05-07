@@ -34,6 +34,20 @@ Assertion.addMethod('between', function (from, to) {
   );
 });
 
+function setterInterceptor() {
+  var intercepted;
+  return {
+    callback: function (v)  {
+      intercepted = v;
+      return v;
+    },
+    getIntercepted: function () {
+      return intercepted;
+    }
+  }
+}
+
+
 // TFN: isNull
 console.log('Testing: isNull..');
 
@@ -752,193 +766,210 @@ console.log('Testing: setter..');
 console.log('Testing: setterBoolean..');
 
 [true, false].forEach(function (v) { // acceptable conditions
-  var prop = 'test', scope = {};
-  expect(utils.setterBoolean(prop).call(scope, v)).to.equal(v);
+  var
+  prop = 'test', scope = {}, interceptor = setterInterceptor();
+  expect(utils.setterBoolean(prop, false, interceptor.callback).call(scope, v)).to.equal(v);
   expect(scope[prop]).to.equal(v);
+  expect(interceptor.getIntercepted()).to.equal(v);
 });
 
 [null, true, false].forEach(function (v) { // acceptable conditions
-  var prop = 'test', scope = {};
-  expect(utils.setterBoolean(prop, true).call(scope, v)).to.equal(v);
+  var
+  prop = 'test', scope = {}, interceptor = setterInterceptor();
+  expect(utils.setterBoolean(prop, true, interceptor.callback).call(scope, v)).to.equal(v);
   expect(scope[prop]).to.equal(v);
+  expect(interceptor.getIntercepted()).to.equal(v);
 });
 
 [null, NaN, 0, ''].forEach(function (v) { // blocked conditions
   var
-  prop = 'test',
-  defValue = true,
-  scope = {};
+  prop = 'test', scope = {}, defValue = true, interceptor = setterInterceptor();
   scope[prop] = defValue;
-  expect(utils.setterBoolean(prop).call(scope, v)).to.equal(defValue);
+  expect(utils.setterBoolean(prop, false, interceptor.callback).call(scope, v)).to.equal(defValue);
   expect(scope[prop]).to.equal(defValue);
+  expect(interceptor.getIntercepted()).to.equal(undefined); // should never get hit
 });
 
 // TFN: setterNumber
 console.log('Testing: setterNumber..');
 
-[0, -1, 1].forEach(function (v) { // all-number conditions
-  var prop = 'test', scope = {};
-  expect(utils.setterNumber(prop).call(scope, v)).to.equal(v);
+[0, -1, 1, 5, 10, 50, 100, 1000].forEach(function (v) { // all-number conditions
+  var prop = 'test', scope = {}, interceptor = setterInterceptor();
+
+  expect(utils.setterNumber(prop, null, null, null, false, false, interceptor.callback).call(scope, v)).to.equal(v);
   expect(scope[prop]).to.equal(v);
+  expect(interceptor.getIntercepted()).to.equal(v);
 });
 
-[0, -1, 1, Infinity].forEach(function (v) { // all-number (including infinity) conditions
-  var prop = 'test', scope = {};
-  expect(utils.setterNumber(prop, null, null, null, true).call(scope, v)).to.equal(v);
+[0, -1, 1, Infinity, null].forEach(function (v) { // all-number (including infinity) conditions
+  var prop = 'test', scope = {}, interceptor = setterInterceptor();
+  expect(utils.setterNumber(prop, null, null, null, true, true, interceptor.callback).call(scope, v)).to.equal(v);
   expect(scope[prop]).to.equal(v);
+  expect(interceptor.getIntercepted()).to.equal(v);
 });
 
 [null, NaN, Infinity, false, true, ''].forEach(function (v) { // blocked conditions
   var
-  prop = 'test',
-  defValue = 0,
-  scope = {};
+  prop = 'test', scope = {}, defValue = 0, interceptor = setterInterceptor();
+
   scope[prop] = defValue;
-  expect(utils.setterNumber(prop).call(scope, v)).to.equal(defValue);
+  expect(utils.setterNumber(prop, null, null, null, false, false, interceptor.callback).call(scope, v)).to.equal(defValue);
   expect(scope[prop]).to.equal(defValue);
+  expect(interceptor.getIntercepted()).to.equal(undefined); // should never get hit
 });
 
 // TFN: setterInt
 console.log('Testing: setterInt..');
 
 [0, -1, 1].forEach(function (v) { // all-integer conditions
-  var prop = 'test', scope = {};
-  expect(utils.setterInt(prop).call(scope, v)).to.equal(v);
+  var prop = 'test', scope = {}, interceptor = setterInterceptor();
+
+  expect(utils.setterInt(prop, null, null, false, false, interceptor.callback).call(scope, v)).to.equal(v);
   expect(scope[prop]).to.equal(v);
+  expect(interceptor.getIntercepted()).to.equal(v);
 });
 
-[0, -1, 1, Infinity].forEach(function (v) { // all-number (including infinity) conditions
-  var prop = 'test', scope = {};
-  expect(utils.setterInt(prop, null, null, true).call(scope, v)).to.equal(v);
+[0, -1, 1, Infinity, null].forEach(function (v) { // all-number (including infinity) conditions
+  var prop = 'test', scope = {}, interceptor = setterInterceptor();
+
+  expect(utils.setterInt(prop, null, null, true, true, interceptor.callback).call(scope, v)).to.equal(v);
   expect(scope[prop]).to.equal(v);
+  expect(interceptor.getIntercepted()).to.equal(v);
 });
 
 [null, NaN, Infinity, false, true, ''].forEach(function (v) { // blocked conditions
   var
-  prop = 'test',
-  defValue = 0,
-  scope = {};
+  prop = 'test', scope = {}, defValue = 0, interceptor = setterInterceptor();
+
   scope[prop] = defValue;
-  expect(utils.setterInt(prop).call(scope, v)).to.equal(defValue);
+  expect(utils.setterInt(prop, null, null, false, false, interceptor.callback).call(scope, v)).to.equal(defValue);
   expect(scope[prop]).to.equal(defValue);
+  expect(interceptor.getIntercepted()).to.equal(undefined); // should never get hit
 });
 
 // TFN: setterString
 console.log('Testing: setterString..');
 
 ['', ' ', 'hello'].forEach(function (v) { // all-string conditions
-  var prop = 'test', scope = {};
-  expect(utils.setterString(prop).call(scope, v)).to.equal(v);
+  var prop = 'test', scope = {}, interceptor = setterInterceptor();
+  expect(utils.setterString(prop, false, interceptor.callback).call(scope, v)).to.equal(v);
   expect(scope[prop]).to.equal(v);
+  expect(interceptor.getIntercepted()).to.equal(v);
 });
 
 ['', ' ', null].forEach(function (v) { // all-string conditions including null
-  var prop = 'test', scope = {};
-  expect(utils.setterString(prop, true).call(scope, v)).to.equal(v);
+  var prop = 'test', scope = {}, interceptor = setterInterceptor();
+  expect(utils.setterString(prop, true, interceptor.callback).call(scope, v)).to.equal(v);
   expect(scope[prop]).to.equal(v);
+  expect(interceptor.getIntercepted()).to.equal(v);
 });
 
 [null, NaN, Infinity, false, true, new Date].forEach(function (v) { // blocked conditions
   var
-  prop = 'test',
-  defValue = 'string',
-  scope = {};
+  prop = 'test', scope = {}, defValue = 'string', interceptor = setterInterceptor();
   scope[prop] = defValue;
-  expect(utils.setterString(prop).call(scope, v)).to.equal(defValue);
+  expect(utils.setterString(prop, false, interceptor.callback).call(scope, v)).to.equal(defValue);
   expect(scope[prop]).to.equal(defValue);
+  expect(interceptor.getIntercepted()).to.equal(undefined);
 });
 
 // TFN: setterScalar
 console.log('Testing: setterScalar..');
 
 ['', 1, '1', true, false, Infinity].forEach(function (v) { // all-scalar conditions
-  var prop = 'test', scope = {};
-  expect(utils.setterScalar(prop).call(scope, v)).to.equal(v);
+  var prop = 'test', scope = {}, interceptor = setterInterceptor();
+  expect(utils.setterScalar(prop, false, interceptor.callback).call(scope, v)).to.equal(v);
   expect(scope[prop]).to.equal(v);
+  expect(interceptor.getIntercepted()).to.equal(v);
 });
 
 ['', 1, '1', true, false, null].forEach(function (v) { // all-scalar conditions including null
-  var prop = 'test', scope = {};
-  expect(utils.setterScalar(prop, true).call(scope, v)).to.equal(v);
+  var prop = 'test', scope = {}, interceptor = setterInterceptor();
+  expect(utils.setterScalar(prop, true, interceptor.callback).call(scope, v)).to.equal(v);
   expect(scope[prop]).to.equal(v);
+  expect(interceptor.getIntercepted()).to.equal(v);
 });
 
 [null, NaN, new Date, [], undefined].forEach(function (v) { // blocked conditions
   var
-  prop = 'test',
-  defValue = 'string',
-  scope = {};
+  prop = 'test', scope = {}, defValue = 'string', interceptor = setterInterceptor();
   scope[prop] = defValue;
-  expect(utils.setterScalar(prop).call(scope, v)).to.equal(defValue);
+  expect(utils.setterScalar(prop, false, interceptor.callback).call(scope, v)).to.equal(defValue);
   expect(scope[prop]).to.equal(defValue);
+  expect(interceptor.getIntercepted()).to.equal(undefined);
 });
 
 // TFN: setterObject
 console.log('Testing: setterObject..');
 
 [{}, [], new Date].forEach(function (v) { // all-object conditions
-  var prop = 'test', scope = {};
-  expect(utils.setterObject(prop).call(scope, v)).to.equal(v);
+  var prop = 'test', scope = {}, interceptor = setterInterceptor();
+  expect(utils.setterObject(prop, null, false, interceptor.callback).call(scope, v)).to.equal(v);
   expect(scope[prop]).to.equal(v);
+  expect(interceptor.getIntercepted()).to.equal(v);
 });
 
 [{}, [], new Array, new Date, new String, null].forEach(function (v) { // all-object conditions including null
-  var prop = 'test', scope = {};
-  expect(utils.setterObject(prop, null, true).call(scope, v)).to.equal(v);
+  var prop = 'test', scope = {}, interceptor = setterInterceptor();
+  expect(utils.setterObject(prop, null, true, interceptor.callback).call(scope, v)).to.equal(v);
   expect(scope[prop]).to.equal(v);
+  expect(interceptor.getIntercepted()).to.equal(v);
 });
 
 (function () { // Date instanceOf checking
-  var prop = 'test', scope = {}, testVal = new Date;
-  expect(utils.setterObject(prop, Date, true).call(scope, testVal)).to.equal(testVal);
+  var prop = 'test', scope = {}, interceptor = setterInterceptor(), testVal = new Date;
+  expect(utils.setterObject(prop, Date, true, interceptor.callback).call(scope, testVal)).to.equal(testVal);
   expect(scope[prop]).to.equal(testVal);
+  expect(interceptor.getIntercepted()).to.equal(testVal);
 })();
 
 (function () { // Array instanceOf checking
-  var prop = 'test', scope = {}, testVal = [1,2,3];
-  expect(utils.setterObject(prop, Array, true).call(scope, testVal)).to.equal(testVal);
+  var prop = 'test', scope = {}, interceptor = setterInterceptor(), testVal = [1,2,3];
+  expect(utils.setterObject(prop, Array, true, interceptor.callback).call(scope, testVal)).to.equal(testVal);
   expect(scope[prop]).to.equal(testVal);
+  expect(interceptor.getIntercepted()).to.equal(testVal);
 })();
 
 (function () { // String instanceOf checking
-  var prop = 'test', scope = {}, testVal = new String('Hello World');
-  expect(utils.setterObject(prop, String, true).call(scope, testVal)).to.equal(testVal);
+  var prop = 'test', scope = {}, interceptor = setterInterceptor(), testVal = new String('Hello World');
+  expect(utils.setterObject(prop, String, true, interceptor.callback).call(scope, testVal)).to.equal(testVal);
   expect(scope[prop]).to.equal(testVal);
+  expect(interceptor.getIntercepted()).to.equal(testVal);
 })();
 
 [null, undefined, NaN, new Object, new Array, [], Array, Object].forEach(function (v) { // blocked conditions
   var
-  prop = 'test',
-  defValue = new Date,
-  scope = {};
+  prop = 'test', scope = {}, defValue = new Date, interceptor = setterInterceptor();
   scope[prop] = defValue;
-  expect(utils.setterObject(prop, Date).call(scope, v)).to.equal(defValue);
+  expect(utils.setterObject(prop, Date, false, interceptor.callback).call(scope, v)).to.equal(defValue);
   expect(scope[prop]).to.equal(defValue);
+  expect(interceptor.getIntercepted()).to.equal(undefined);
 });
 
 // TFN: setterFunction
 console.log('Testing: setterFunction..');
 
 [utils.noop, utils.noopPassThru, Date, Array, Object].forEach(function (v) { // all-function conditions
-  var prop = 'test', scope = {};
-  expect(utils.setterFunction(prop).call(scope, v)).to.equal(v);
+  var prop = 'test', scope = {}, interceptor = setterInterceptor();
+  expect(utils.setterFunction(prop, false, interceptor.callback).call(scope, v)).to.equal(v);
   expect(scope[prop]).to.equal(v);
+  expect(interceptor.getIntercepted()).to.equal(v);
 });
 
 [utils.noop, utils.noopPassThru, Date, Array, Object, null].forEach(function (v) { // all-function conditions including null
-  var prop = 'test', scope = {};
-  expect(utils.setterFunction(prop, true).call(scope, v)).to.equal(v);
+  var prop = 'test', scope = {}, interceptor = setterInterceptor();
+  expect(utils.setterFunction(prop, true, interceptor.callback).call(scope, v)).to.equal(v);
   expect(scope[prop]).to.equal(v);
+  expect(interceptor.getIntercepted()).to.equal(v);
 });
 
 [null, undefined, NaN, new Date, new Array, new Object].forEach(function (v) { // blocked conditions
   var
-  prop = 'test',
-  defValue = utils.noop,
-  scope = {};
+  prop = 'test', scope = {}, defValue = utils.noop, interceptor = setterInterceptor();
   scope[prop] = defValue;
-  expect(utils.setterFunction(prop).call(scope, v)).to.equal(defValue);
+  expect(utils.setterFunction(prop, false, interceptor.callback).call(scope, v)).to.equal(defValue);
   expect(scope[prop]).to.equal(defValue);
+  expect(interceptor.getIntercepted()).to.equal(undefined);
 });
 
 // TFN: setterDate
@@ -970,11 +1001,11 @@ console.log('Testing: setterDate..');
 
 ].forEach(function (test) {
   var
-  prop        = 'test',
-  scope       = {};
+  prop = 'test', scope = {}, interceptor = setterInterceptor();
   scope[prop] = null;
-  expect(utils.setterDate(prop, test[1], test[2]).call(scope, test[0]).toISOString()).to.equal(test[3].toISOString());
+  expect(utils.setterDate(prop, test[1], test[2], false, interceptor.callback).call(scope, test[0]).toISOString()).to.equal(test[3].toISOString());
   expect(scope[prop].toISOString()).to.equal(test[3].toISOString());
+  expect(interceptor.getIntercepted().toISOString()).to.equal(test[3].toISOString());
 });
 
 // test readme examples
