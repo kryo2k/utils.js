@@ -357,6 +357,27 @@ nowStr = now.toISOString();
   expect(utils.asDate(test).toISOString()).to.equal(nowStr);
 });
 
+// TFN: dateParse
+console.log('Testing: dateParse..');
+
+[
+  [null,      false],
+  [undefined, false],
+  [NaN,       false],
+  [Infinity,  false],
+  [false,     false]
+].forEach(function (test) {
+  expect(utils.dateParse(test[0])).to.equal(test[1]);
+});
+
+[
+  [new Date(2000, 0, 1, 0, 0, 0, 0), new Date(2000, 0, 1, 0, 0, 0, 0)],
+  ['2000-01-01 00:00:00.000',        new Date(2000, 0, 1, 0, 0, 0, 0)],
+  [946684800000,                     new Date('2000-01-01T00:00:00.000Z')],
+].forEach(function (test) {
+  expect(utils.dateParse(test[0]).toISOString()).to.equal(test[1].toISOString());
+});
+
 // TFN: dateNow
 console.log('Testing: dateNow..');
 
@@ -575,6 +596,32 @@ expect(utils.clamp(100, 1, 10)).to.equal(10);
 expect(utils.clamp(-100, null, 0)).to.equal(-100);
 expect(utils.clamp(-100, 0)).to.equal(0);
 expect(utils.clamp(100, 0)).to.equal(100);
+
+// TFN: clampDate
+console.log('Testing: clampDate..');
+
+[
+  // no boundary tests
+  [new Date(2000, 0, 1, 0, 0, 0, 0),        null,                               null,                                new Date(2000, 0, 1, 0, 0, 0, 0)],
+
+  // minimum boundary tests
+  [new Date(2000, 0, 1, 0, 0, 0, 0),        new Date(2000, 0, 1, 0, 0, 0, 0),   null,                                new Date(2000, 0, 1, 0, 0, 0, 0)],
+  [new Date(2001, 0, 1, 0, 0, 0, 0),        new Date(2000, 0, 1, 0, 0, 0, 0),   null,                                new Date(2001, 0, 1, 0, 0, 0, 0)],
+  [new Date(1999, 11, 31, 23, 59, 59, 999), new Date(2000, 0, 1, 0, 0, 0, 0),   null,                                new Date(2000, 0, 1, 0, 0, 0, 0)],
+
+  // maximum boundary tests
+  [new Date(2000, 0, 1, 0, 0, 0, 0),        null,                               new Date(1980, 0, 1, 0, 0, 0, 0),    new Date(1980, 0, 1, 0, 0, 0, 0)],
+  [new Date(2020, 0, 1, 0, 0, 0, 0),        null,                               new Date(2010, 0, 1, 0, 0, 0, 1),    new Date(2010, 0, 1, 0, 0, 0, 1)],
+  [new Date(1980, 0, 1, 0, 0, 0, 0),        null,                               new Date(2000, 0, 1, 0, 0, 0, 0),    new Date(1980, 0, 1, 0, 0, 0, 0)],
+
+  // maximum and minimum boundary tests
+  [new Date(1970, 0, 1, 0, 0, 0, 0),        new Date(1980, 0, 1, 0, 0, 0, 0),   new Date(1980, 0, 1, 5, 0, 0, 0),    new Date(1980, 0, 1, 0, 0, 0, 0)],
+  [new Date(1980, 0, 1, 3, 0, 0, 0),        new Date(1980, 0, 1, 0, 0, 0, 0),   new Date(1980, 0, 1, 5, 0, 0, 0),    new Date(1980, 0, 1, 3, 0, 0, 0)],
+  [new Date(1990, 0, 1, 0, 0, 0, 0),        new Date(1980, 0, 1, 0, 0, 0, 0),   new Date(1980, 0, 1, 5, 0, 0, 0),    new Date(1980, 0, 1, 5, 0, 0, 0)]
+
+].forEach(function (test) {
+  expect(utils.clampDate(test[0], test[1], test[2]).toISOString()).to.equal(test[3].toISOString());
+});
 
 // TFN: logscale
 console.log('Testing: logscale..');
@@ -892,6 +939,42 @@ console.log('Testing: setterFunction..');
   scope[prop] = defValue;
   expect(utils.setterFunction(prop).call(scope, v)).to.equal(defValue);
   expect(scope[prop]).to.equal(defValue);
+});
+
+// TFN: setterDate
+console.log('Testing: setterDate..');
+
+[
+  // string interpolation tests
+  ['2000-01-01 00:00:00',                   null,                               null,                                new Date(2000, 0, 1,  0, 0, 0, 0)],
+  ['2000-01-01 12:00:00',                   null,                               null,                                new Date(2000, 0, 1, 12, 0, 0, 0)],
+  ['2000-01-01 23:59:59.999',               null,                               null,                                new Date(2000, 0, 1, 23, 59, 59, 999)],
+
+  // no boundary tests
+  [new Date(2000, 0, 1, 0, 0, 0, 0),        null,                               null,                                new Date(2000, 0, 1, 0, 0, 0, 0)],
+
+  // minimum boundary tests
+  [new Date(2000, 0, 1, 0, 0, 0, 0),        new Date(2000, 0, 1, 0, 0, 0, 0),   null,                                new Date(2000, 0, 1, 0, 0, 0, 0)],
+  [new Date(2001, 0, 1, 0, 0, 0, 0),        new Date(2000, 0, 1, 0, 0, 0, 0),   null,                                new Date(2001, 0, 1, 0, 0, 0, 0)],
+  [new Date(1999, 11, 31, 23, 59, 59, 999), new Date(2000, 0, 1, 0, 0, 0, 0),   null,                                new Date(2000, 0, 1, 0, 0, 0, 0)],
+
+  // maximum boundary tests
+  [new Date(2000, 0, 1, 0, 0, 0, 0),        null,                               new Date(1980, 0, 1, 0, 0, 0, 0),    new Date(1980, 0, 1, 0, 0, 0, 0)],
+  [new Date(2020, 0, 1, 0, 0, 0, 0),        null,                               new Date(2010, 0, 1, 0, 0, 0, 1),    new Date(2010, 0, 1, 0, 0, 0, 1)],
+  [new Date(1980, 0, 1, 0, 0, 0, 0),        null,                               new Date(2000, 0, 1, 0, 0, 0, 0),    new Date(1980, 0, 1, 0, 0, 0, 0)],
+
+  // maximum and minimum boundary tests
+  [new Date(1970, 0, 1, 0, 0, 0, 0),        new Date(1980, 0, 1, 0, 0, 0, 0),   new Date(1980, 0, 1, 5, 0, 0, 0),    new Date(1980, 0, 1, 0, 0, 0, 0)],
+  [new Date(1980, 0, 1, 3, 0, 0, 0),        new Date(1980, 0, 1, 0, 0, 0, 0),   new Date(1980, 0, 1, 5, 0, 0, 0),    new Date(1980, 0, 1, 3, 0, 0, 0)],
+  [new Date(1990, 0, 1, 0, 0, 0, 0),        new Date(1980, 0, 1, 0, 0, 0, 0),   new Date(1980, 0, 1, 5, 0, 0, 0),    new Date(1980, 0, 1, 5, 0, 0, 0)]
+
+].forEach(function (test) {
+  var
+  prop        = 'test',
+  scope       = {};
+  scope[prop] = null;
+  expect(utils.setterDate(prop, test[1], test[2]).call(scope, test[0]).toISOString()).to.equal(test[3].toISOString());
+  expect(scope[prop].toISOString()).to.equal(test[3].toISOString());
 });
 
 // test readme examples

@@ -109,28 +109,35 @@
     return String(v);
   }
 
-  function asDate(v, defaultVal) {
+  function asDate(v, fallbackDate) {
     if(isDate(v)) {
       return v;
     }
 
-    return dateNow(v, defaultVal);
+    return dateNow(v, fallbackDate);
   }
 
-  function dateNow(now, fallback) {
-    fallback = isDate(fallback) ? fallback : new Date();
+  function dateParse(v) {
+    if(isNullUndefined(v) || isBoolean(v)) {
+      return false;
+    }
 
-    if((isNumber(now) && isFinite(now)) || isString(now)) {
-      var sane = new Date(now);
+    if((isNumber(v) && isFinite(v)) || isString(v)) {
+      var sane = new Date(v);
 
       if(isDate(sane)) {
         return sane;
       }
     }
 
-    return isDate(now)
-      ? new Date(+now) // send back a copy, if already a date object!
-      : fallback;      // send back fallback
+    return isDate(v)
+      ? new Date(+v) // send back a copy, if already a date object!
+      : false;
+  }
+
+  function dateNow(now, fallback) {
+    fallback = isDate(fallback) ? fallback : new Date();
+    return dateParse(now) || fallback;
   }
 
   function dateEquals(d1, d2, fallback) {
@@ -191,6 +198,15 @@
     if (isNumber(max)) { v = Math.min(v, max); }
     if (isNumber(precision)) { v = round(v, precision); }
     return v;
+  }
+
+  function clampDate (date, min, max) {
+    if(!isDate(date)) { return false; }
+    return new Date( clamp (
+      +date,
+      isDate(min) ? +min : null,
+      isDate(max) ? +max : null,
+      0) );
   }
 
   function logscale(n, nMin, nMax, vMin, vMax, precision) {
@@ -494,14 +510,27 @@
     });
   }
 
-  function setterDate(prop, allowNull, cb) {
+  function setterDate(prop, minDate, maxDate, allowNull, cb) {
     return setter(prop, allowNull, function (v) {
       if(allowNull && isNull(v)) {
         return v;
       }
 
+      var date = false;
 
-      return this[prop];
+      if(isDate(v)) {
+        date = v;
+      }
+      else {
+        date = dateParse(v);
+      }
+
+      if(!date) { // invalid date
+        return this[prop];
+      }
+
+      // return a final clamped date copy
+      return clampDate(date, minDate, maxDate);
     });
   }
 
@@ -527,6 +556,7 @@
     asBoolean: asBoolean,
     asString: asString,
     asDate: asDate,
+    dateParse: dateParse,
     dateNow: dateNow,
     dateSetHours: dateSetHours,
     dateEquals: dateEquals,
@@ -534,6 +564,7 @@
     dateCeil: dateCeil,
     round: round,
     clamp: clamp,
+    clampDate: clampDate,
     logscale: logscale,
     linearscale: linearscale,
     random: random,
@@ -550,7 +581,8 @@
     setterString: setterString,
     setterScalar: setterScalar,
     setterObject: setterObject,
-    setterFunction: setterFunction
+    setterFunction: setterFunction,
+    setterDate: setterDate
   };
 
   /**

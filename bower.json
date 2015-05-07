@@ -1,0 +1,28 @@
+{
+  "name": "utilities.js",
+  "main": "index.js",
+  "version": "1.0.3",
+  "homepage": "https://github.com/kryo2k/utils.js",
+  "authors": [
+    "Hans Doller <kryo2k@gmail.com>"
+  ],
+  "description": "A small collection of useful algorithms and type-checking functions.",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "nodejs",
+    "utilities",
+    "framework-agnostic"
+  ],
+  "license": "GPLv2",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
