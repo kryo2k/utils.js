@@ -156,7 +156,10 @@ Object.defineProperties(LimitedDate.prototype, {
   }
 });
 
-var limitedDate = new LimitedDate(new Date(), Date.parse('2001-01-01 00:00:00'), Date.parse('2020-01-01 00:00:00'));
+var
+limitMin = Date.parse('2001-01-01 00:00:00'),
+limitMax = Date.parse('2020-01-01 00:00:00'),
+limitedDate = new LimitedDate(new Date(), limitMin, limitMax);
 console.log(limitedDate.date);
 ```
 
