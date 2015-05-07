@@ -1,7 +1,7 @@
 ## utilities.js
 Simple collection of functions and algorithms for Javascript/NodeJS without any other dependencies.
 
-*Currently only supports node.js, but can be easilly ported to any framework.*
+*Originally written for node.js, but am in the process of porting this to other platforms.*
 
 ### Installation
 
@@ -29,6 +29,10 @@ utils = require('utilities.js');
 var
 utils = window.utilities;
 ```
+
+### Framework Ports & Wrappers
+
+* [Angular $utilities Service](https://github.com/kryo2k/angular-utilities.js)
 
 ### Methods:
 | Function Name     | Arguments | Description |
