@@ -130,9 +130,9 @@ PROP_DATEMIN = '_dateMin',
 PROP_DATEMAX = '_dateMax';
 
 function LimitedDate(date, min, max) {
-  this.date    = date;
   this.dateMin = min;
   this.dateMax = max;
+  this.date    = date;
 }
 
 Object.defineProperties(LimitedDate.prototype, {
