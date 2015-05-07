@@ -980,3 +980,6 @@ console.log('Testing: setterDate..');
 // test readme examples
 console.log('Testing: Example (MyValue)..');
 require('./example-myvalue');
+
+console.log('Testing: Example (LimitedDate)..');
+require('./example-limiteddate');

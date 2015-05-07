@@ -117,6 +117,49 @@ var myValue = new MyValue('hello');
 console.log(myValue.value); // 'hello'
 ```
 
+#### Example class: LimitedDate
+Adding a property to a class which should always be a date. Can optionally support a boundary range for date values.
+
+```js
+var
+utils = require('utilities.js');
+
+var
+PROP_DATE = '_date',
+PROP_DATEMIN = '_dateMin',
+PROP_DATEMAX = '_dateMax';
+
+function LimitedDate(date, min, max) {
+  this.date    = date;
+  this.dateMin = min;
+  this.dateMax = max;
+}
+
+Object.defineProperties(LimitedDate.prototype, {
+  dateMin: {
+    get: utils.getter(PROP_DATEMIN),
+    set: utils.setterDate(PROP_DATEMIN, null, null, true)
+  },
+  dateMax: {
+    get: utils.getter(PROP_DATEMAX),
+    set: utils.setterDate(PROP_DATEMAX, null, null, true)
+  },
+  date: {
+
+    // get the current value of PROP_DATE (default: undefined)
+    get: utils.getter(PROP_DATE),
+
+    // force the date to be with-in our range:
+    set: utils.setterDate(PROP_DATE, null, null, false, function (date) {
+      return utils.clampDate(date, this.dateMin, this.dateMax);
+    })
+  }
+});
+
+var limitedDate = new LimitedDate(new Date(), Date.parse('2001-01-01 00:00:00'), Date.parse('2020-01-01 00:00:00'));
+console.log(limitedDate.date);
+```
+
 ### Disclaimer
 *These functions have been tested extensively in nodejs, and include unit tests. Nevertheless, if bugs are found, please report them and I'll pull in patches it! I hold no responsibility for any damages this code might incur if used in a production environment. This library is still in an experimental phase.*
 
