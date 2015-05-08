@@ -516,6 +516,31 @@
     });
   }
 
+  function setterEnum(prop, enumerables, allowNull, cb) {
+    cb = cb || noopPassThru;
+
+    // always convert to array, even if null/undefined.
+    enumerables = isArray(enumerables)
+      ? enumerables
+      : [enumerables];
+
+    return setter(prop, allowNull, function (v) {
+      if(allowNull && isNull(v)) {
+        return cb.call(this, v);
+      }
+
+      var // check enumerables, find matching value index.
+      enumIndex = enumerables.indexOf(v);
+
+      if(enumIndex === -1) { // do not update, or notify cb.
+        return this[prop];
+      }
+
+      // return original enumerable always
+      return cb.call(this, enumerables[enumIndex]);
+    });
+  }
+
   function setterDate(prop, minDate, maxDate, allowNull, cb) {
     cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
@@ -589,6 +614,7 @@
     setterScalar: setterScalar,
     setterObject: setterObject,
     setterFunction: setterFunction,
+    setterEnum: setterEnum,
     setterDate: setterDate
   };
 

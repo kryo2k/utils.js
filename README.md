@@ -83,6 +83,7 @@ utils = window.utilities;
 | setterScalar      | (property, allowNull, setterFn) | Returns a scalar setter function. |
 | setterFunction    | (property, allowNull, setterFn) | Returns a function setter function. |
 | setterObject      | (property, instanceOf, allowNull, setterFn) | Returns an object setter function, with optional instance checking. |
+| setterEnum        | (property, enumerables, allowNull, setterFn) | Restrict property value to be  one of the enumerables provided. These enumerables can be any scalar, or objects, but not arrays. |
 | setterDate        | (property, minDate, maxDate, allowNull, setterFn) | Returns a date object setter function. If a string or integer are passed as a value, it will normalize it into a Date object. Supports defining min and max dates. Both min and max are optional, and act independently -- but if being used, they must be real Date objects. |
 
 ### Getters & Setters

@@ -34,17 +34,89 @@ Assertion.addMethod('between', function (from, to) {
   );
 });
 
-function setterInterceptor() {
-  var intercepted;
-  return {
-    callback: function (v)  {
-      intercepted = v;
-      return v;
-    },
-    getIntercepted: function () {
-      return intercepted;
+function setterTestIterator(setterFn, valueFn, debugging) {
+  if(!utils.isFunction(setterFn)) {
+    return utils.noop;
+  }
+
+  valueFn = utils.isFunction(valueFn) ? valueFn : utils.noopPassThru;
+
+  var setterInterceptor = function () {
+    var intercepted;
+    return {
+      callback: function (v)  {
+        intercepted = v;
+        return v;
+      },
+      getIntercepted: function () {
+        return intercepted;
+      }
     }
   }
+
+  return function (test, index) {
+    if(debugging)
+      console.log('raw test (%d): %j', index, test);
+
+    if(!utils.isArray(test) || test.length < 4) {
+
+      if(debugging)
+        console.log('invalid test format (%d), skipping.', index);
+
+      return;
+    }
+    var
+    defaultVal, testVal, expectVal, expectIntrVal, setterArgs = [],
+    texpOffset = 0, interceptor = setterInterceptor(),
+    scope = {}, prop = 'test';
+
+    if(test.length > 4) { // use setter args (2nd+ test param, should always be an array)
+      setterArgs = test.slice(1, test.length - 3);
+      texpOffset = setterArgs.length;
+    }
+
+    defaultVal    = test[0];
+    testVal       = test[texpOffset + 1];
+    expectVal     = test[texpOffset + 2];
+    expectIntrVal = test[texpOffset + 3];
+
+    // inject prop name at the beginning of setter args.
+    setterArgs.unshift(prop);
+
+    // inject intercepter callback at the end of args.
+    setterArgs.push(interceptor.callback);
+
+    if(debugging)
+      console.log('running test setup:', {
+        setterArguments: setterArgs,
+        defaultValue: defaultVal,
+        testingValue: testVal,
+        expectedValue: expectVal,
+        expectInterceptValue: expectIntrVal
+      });
+
+    var
+    testSetter = setterFn.apply(this, setterArgs);
+
+    // set default value in mock scope object.
+    scope[prop] = defaultVal;
+
+    // expectations:
+    expect(valueFn(testSetter.call(scope, testVal)))
+      .to.equal(valueFn(expectVal));
+
+    if(debugging)
+      console.log('scope value: %j (%s)', scope[prop], valueFn(scope[prop]));
+
+    expect(valueFn(scope[prop]))
+      .to.equal(valueFn(expectVal));
+
+    if(debugging)
+      console.log('intercept value: %j (%s)', interceptor.getIntercepted(), valueFn(interceptor.getIntercepted()));
+
+    expect(valueFn(interceptor.getIntercepted()))
+      .to.equal(valueFn(expectIntrVal));
+  };
 }
 
 
@@ -743,270 +815,222 @@ console.log('Testing: getter..');
 // TFN: setter
 console.log('Testing: setter..');
 
-(function (scope, prop, setTo) { // not-null setter
-
-  // not-null test
-  expect(utils.setter(prop).call(scope, setTo)).to.equal(setTo);
-  expect(scope[prop]).to.equal(setTo);
-
-  // do null test (currently, scope[prop] === setTo)
-  expect(utils.setter(prop).call(scope, null)).to.equal(setTo);
-  expect(scope[prop]).to.equal(setTo);
-
-})({}, 'test', true);
-
-(function (scope, prop) { // null-allowed setter
-
-  expect(utils.setter(prop, true).call(scope, null)).to.equal(null);
-  expect(scope[prop]).to.equal(null);
-
-})({ test: true }, 'test');
+[
+// defaultVal allowNull testVal     expectVal   expectIntrVal
+  [null,      false,    null,       null,       undefined],
+  [null,      true,     null,       null,       null],
+  [0,         false,    null,       0,          undefined],
+  [0,         false,    1,          1,          1],
+  [null,      false,    Infinity,   Infinity,   Infinity],
+  [null,      false,    utils.noop, utils.noop, utils.noop],
+  [null,      false,    'x',        'x',        'x']
+].forEach(setterTestIterator(utils.setter));
 
 // TFN: setterBoolean
 console.log('Testing: setterBoolean..');
 
-[true, false].forEach(function (v) { // acceptable conditions
-  var
-  prop = 'test', scope = {}, interceptor = setterInterceptor();
-  expect(utils.setterBoolean(prop, false, interceptor.callback).call(scope, v)).to.equal(v);
-  expect(scope[prop]).to.equal(v);
-  expect(interceptor.getIntercepted()).to.equal(v);
-});
-
-[null, true, false].forEach(function (v) { // acceptable conditions
-  var
-  prop = 'test', scope = {}, interceptor = setterInterceptor();
-  expect(utils.setterBoolean(prop, true, interceptor.callback).call(scope, v)).to.equal(v);
-  expect(scope[prop]).to.equal(v);
-  expect(interceptor.getIntercepted()).to.equal(v);
-});
-
-[null, NaN, 0, ''].forEach(function (v) { // blocked conditions
-  var
-  prop = 'test', scope = {}, defValue = true, interceptor = setterInterceptor();
-  scope[prop] = defValue;
-  expect(utils.setterBoolean(prop, false, interceptor.callback).call(scope, v)).to.equal(defValue);
-  expect(scope[prop]).to.equal(defValue);
-  expect(interceptor.getIntercepted()).to.equal(undefined); // should never get hit
-});
+[
+// defaultVal allowNull testVal     expectVal expectIntrVal
+  [null,      false,    null,       null,     undefined],
+  [null,      true,     null,       null,     null],
+  [false,     false,    null,       false,    undefined],
+  [true,      false,    null,       true,     undefined],
+  [false,     false,    true,       true,     true],
+  [true,      false,    false,      false,    false],
+  [null,      false,    NaN,        null,     undefined],
+  [null,      false,    Infinity,   null,     undefined],
+  [null,      false,    new Date,   null,     undefined],
+  [null,      false,    '1',        null,     undefined],
+  [null,      false,    '0',        null,     undefined],
+  [null,      false,    '',         null,     undefined],
+].forEach(setterTestIterator(utils.setterBoolean));
 
 // TFN: setterNumber
 console.log('Testing: setterNumber..');
 
-[0, -1, 1, 5, 10, 50, 100, 1000].forEach(function (v) { // all-number conditions
-  var prop = 'test', scope = {}, interceptor = setterInterceptor();
+[
+// defaultVal min   max   precision allowInfinite allowNull   testVal       expectVal    expectIntrVal
+  // boundary edge testing
+  [1,         0,    1,    0,        false,        false,      0,            0,           0],
+  [0,         0,    1,    0,        false,        false,      1,            1,           1],
+  [1,         0,    1,    0,        false,        false,      0,            0,           0],
 
-  expect(utils.setterNumber(prop, null, null, null, false, false, interceptor.callback).call(scope, v)).to.equal(v);
-  expect(scope[prop]).to.equal(v);
-  expect(interceptor.getIntercepted()).to.equal(v);
-});
+  // boundary overlap testing
+  [1,         0,    1,    0,        false,        false,      -1,           0,           0],
+  [1,         0,    1,    0,        true,         false,      -Infinity,    0,           0],
+  [1,         0,    1,    0,        false,        false,      2,            1,           1],
+  [1,         0,    1,    0,        true,         false,      Infinity,     1,           1],
 
-[0, -1, 1, Infinity, null].forEach(function (v) { // all-number (including infinity) conditions
-  var prop = 'test', scope = {}, interceptor = setterInterceptor();
-  expect(utils.setterNumber(prop, null, null, null, true, true, interceptor.callback).call(scope, v)).to.equal(v);
-  expect(scope[prop]).to.equal(v);
-  expect(interceptor.getIntercepted()).to.equal(v);
-});
+  // precision testing
+  [0,         0,    1,    0,        false,        false,      0.4,          0,           0],
+  [0,         0,    1,    0,        false,        false,      0.5,          1,           1],
+  [0,         0,    1,    1,        false,        false,      0.5,          0.5,         0.5],
+  [0,         0,    1,    2,        false,        false,      0.05,         0.05,        0.05],
+  [0,         0,    1,    3,        false,        false,      0.005,        0.005,       0.005],
+  [0,         0,    1,    4,        false,        false,      0.0005,       0.0005,      0.0005],
+  [0,         0,    1,    5,        false,        false,      0.00005,      0.00005,     0.00005],
+  [0,         0,    1,    6,        false,        false,      0.000005,     0.000005,    0.000005],
+  [0,         0,    1,    7,        false,        false,      0.0000005,    0.0000005,   0.0000005],
+  [0,         0,    1,    8,        false,        false,      0.00000005,   0.00000005,  0.00000005],
+  [0,         0,    1,    9,        false,        false,      0.000000005,  0.000000005, 0.000000005],
 
-[null, NaN, Infinity, false, true, ''].forEach(function (v) { // blocked conditions
-  var
-  prop = 'test', scope = {}, defValue = 0, interceptor = setterInterceptor();
+  // normal input (no clamping)
+  [0,         null, null, 0,        false,        false,      100,          100,         100],
+  [0,         null, null, 0,        false,        false,      -100,         -100,        -100],
+  [0,         null, null, 0,        true,         false,      Infinity,     Infinity,    Infinity],
+  [null,      null, null, 0,        false,        true,       null,         null,        null],
 
-  scope[prop] = defValue;
-  expect(utils.setterNumber(prop, null, null, null, false, false, interceptor.callback).call(scope, v)).to.equal(defValue);
-  expect(scope[prop]).to.equal(defValue);
-  expect(interceptor.getIntercepted()).to.equal(undefined); // should never get hit
-});
+  // blocking  input tests
+  [0,         null, null, 0,        false,        false,      Infinity,     0,           undefined],
+  [0,         null, null, 0,        false,        false,      NaN,          0,           undefined],
+  [0,         null, null, 0,        false,        false,      false,        0,           undefined],
+  [null,      null, null, 0,        false,        false,      null,         null,        undefined]
+].forEach(setterTestIterator(utils.setterNumber));
 
 // TFN: setterInt
 console.log('Testing: setterInt..');
 
-[0, -1, 1].forEach(function (v) { // all-integer conditions
-  var prop = 'test', scope = {}, interceptor = setterInterceptor();
-
-  expect(utils.setterInt(prop, null, null, false, false, interceptor.callback).call(scope, v)).to.equal(v);
-  expect(scope[prop]).to.equal(v);
-  expect(interceptor.getIntercepted()).to.equal(v);
-});
-
-[0, -1, 1, Infinity, null].forEach(function (v) { // all-number (including infinity) conditions
-  var prop = 'test', scope = {}, interceptor = setterInterceptor();
-
-  expect(utils.setterInt(prop, null, null, true, true, interceptor.callback).call(scope, v)).to.equal(v);
-  expect(scope[prop]).to.equal(v);
-  expect(interceptor.getIntercepted()).to.equal(v);
-});
-
-[null, NaN, Infinity, false, true, ''].forEach(function (v) { // blocked conditions
-  var
-  prop = 'test', scope = {}, defValue = 0, interceptor = setterInterceptor();
-
-  scope[prop] = defValue;
-  expect(utils.setterInt(prop, null, null, false, false, interceptor.callback).call(scope, v)).to.equal(defValue);
-  expect(scope[prop]).to.equal(defValue);
-  expect(interceptor.getIntercepted()).to.equal(undefined); // should never get hit
-});
+[
+// defaultVal min   max   allowInfinite allowNull   testVal       expectVal    expectIntrVal
+  [1,         0,    1,    false,        false,      0,            0,           0],
+  [0,         0,    1,    false,        false,      1,            1,           1],
+  [0,         0,    1,    false,        false,      0.4,          0,           0],
+  [0,         0,    1,    false,        false,      0.5,          1,           1],
+  [0,         null, null, false,        false,      100,          100,         100],
+  [0,         null, null, false,        false,      -100,         -100,        -100],
+  [0,         null, null, false,        false,      Infinity,     0,           undefined],
+  [0,         null, null, false,        false,      NaN,          0,           undefined],
+  [0,         null, null, false,        false,      false,        0,           undefined],
+  [0,         null, null, true,         false,      Infinity,     Infinity,    Infinity],
+  [null,      null, null, false,        false,      null,         null,        undefined],
+  [null,      null, null, false,        true,       null,         null,        null],
+].forEach(setterTestIterator(utils.setterInt));
 
 // TFN: setterString
 console.log('Testing: setterString..');
 
-['', ' ', 'hello'].forEach(function (v) { // all-string conditions
-  var prop = 'test', scope = {}, interceptor = setterInterceptor();
-  expect(utils.setterString(prop, false, interceptor.callback).call(scope, v)).to.equal(v);
-  expect(scope[prop]).to.equal(v);
-  expect(interceptor.getIntercepted()).to.equal(v);
-});
-
-['', ' ', null].forEach(function (v) { // all-string conditions including null
-  var prop = 'test', scope = {}, interceptor = setterInterceptor();
-  expect(utils.setterString(prop, true, interceptor.callback).call(scope, v)).to.equal(v);
-  expect(scope[prop]).to.equal(v);
-  expect(interceptor.getIntercepted()).to.equal(v);
-});
-
-[null, NaN, Infinity, false, true, new Date].forEach(function (v) { // blocked conditions
-  var
-  prop = 'test', scope = {}, defValue = 'string', interceptor = setterInterceptor();
-  scope[prop] = defValue;
-  expect(utils.setterString(prop, false, interceptor.callback).call(scope, v)).to.equal(defValue);
-  expect(scope[prop]).to.equal(defValue);
-  expect(interceptor.getIntercepted()).to.equal(undefined);
-});
+[
+// defaultVal allowNull testVal     expectVal expectIntrVal
+  ['',        false,    null,       '',       undefined],
+  [null,      false,    null,       null,     undefined],
+  ['',        true,     null,       null,     null],
+  ['',        true,     NaN,        '',       undefined],
+  ['',        true,     Infinity,   '',       undefined],
+  ['',        true,     false,      '',       undefined],
+  ['',        true,     true,       '',       undefined],
+  ['',        true,     new Date(), '',       undefined],
+  ['hello',   false,    'hi',       'hi',     'hi']
+].forEach(setterTestIterator(utils.setterString));
 
 // TFN: setterScalar
 console.log('Testing: setterScalar..');
 
-['', 1, '1', true, false, Infinity].forEach(function (v) { // all-scalar conditions
-  var prop = 'test', scope = {}, interceptor = setterInterceptor();
-  expect(utils.setterScalar(prop, false, interceptor.callback).call(scope, v)).to.equal(v);
-  expect(scope[prop]).to.equal(v);
-  expect(interceptor.getIntercepted()).to.equal(v);
-});
-
-['', 1, '1', true, false, null].forEach(function (v) { // all-scalar conditions including null
-  var prop = 'test', scope = {}, interceptor = setterInterceptor();
-  expect(utils.setterScalar(prop, true, interceptor.callback).call(scope, v)).to.equal(v);
-  expect(scope[prop]).to.equal(v);
-  expect(interceptor.getIntercepted()).to.equal(v);
-});
-
-[null, NaN, new Date, [], undefined].forEach(function (v) { // blocked conditions
-  var
-  prop = 'test', scope = {}, defValue = 'string', interceptor = setterInterceptor();
-  scope[prop] = defValue;
-  expect(utils.setterScalar(prop, false, interceptor.callback).call(scope, v)).to.equal(defValue);
-  expect(scope[prop]).to.equal(defValue);
-  expect(interceptor.getIntercepted()).to.equal(undefined);
-});
+[
+// defaultVal allowNull testVal     expectVal expectIntrVal
+  [1,         false,    null,       1,        undefined],
+  [null,      false,    null,       null,     undefined],
+  [1,         true,     null,       null,     null],
+  [1,         true,     new Date(), 1,        undefined],
+  ['hello',   false,    'hi',       'hi',     'hi'],
+  [false,     false,    null,       false,    undefined],
+  [false,     false,    true,       true,     true],
+  [null,      false,    false,      false,    false]
+].forEach(setterTestIterator(utils.setterScalar));
 
 // TFN: setterObject
 console.log('Testing: setterObject..');
 
-[{}, [], new Date].forEach(function (v) { // all-object conditions
-  var prop = 'test', scope = {}, interceptor = setterInterceptor();
-  expect(utils.setterObject(prop, null, false, interceptor.callback).call(scope, v)).to.equal(v);
-  expect(scope[prop]).to.equal(v);
-  expect(interceptor.getIntercepted()).to.equal(v);
-});
+var
+MOCK_SO_1 = {},
+MOCK_SO_2 = {},
+MOCK_SO_3 = { experimental: true },
+MOCK_SO_4 = new Date;
 
-[{}, [], new Array, new Date, new String, null].forEach(function (v) { // all-object conditions including null
-  var prop = 'test', scope = {}, interceptor = setterInterceptor();
-  expect(utils.setterObject(prop, null, true, interceptor.callback).call(scope, v)).to.equal(v);
-  expect(scope[prop]).to.equal(v);
-  expect(interceptor.getIntercepted()).to.equal(v);
-});
-
-(function () { // Date instanceOf checking
-  var prop = 'test', scope = {}, interceptor = setterInterceptor(), testVal = new Date;
-  expect(utils.setterObject(prop, Date, true, interceptor.callback).call(scope, testVal)).to.equal(testVal);
-  expect(scope[prop]).to.equal(testVal);
-  expect(interceptor.getIntercepted()).to.equal(testVal);
-})();
-
-(function () { // Array instanceOf checking
-  var prop = 'test', scope = {}, interceptor = setterInterceptor(), testVal = [1,2,3];
-  expect(utils.setterObject(prop, Array, true, interceptor.callback).call(scope, testVal)).to.equal(testVal);
-  expect(scope[prop]).to.equal(testVal);
-  expect(interceptor.getIntercepted()).to.equal(testVal);
-})();
-
-(function () { // String instanceOf checking
-  var prop = 'test', scope = {}, interceptor = setterInterceptor(), testVal = new String('Hello World');
-  expect(utils.setterObject(prop, String, true, interceptor.callback).call(scope, testVal)).to.equal(testVal);
-  expect(scope[prop]).to.equal(testVal);
-  expect(interceptor.getIntercepted()).to.equal(testVal);
-})();
-
-[null, undefined, NaN, new Object, new Array, [], Array, Object].forEach(function (v) { // blocked conditions
-  var
-  prop = 'test', scope = {}, defValue = new Date, interceptor = setterInterceptor();
-  scope[prop] = defValue;
-  expect(utils.setterObject(prop, Date, false, interceptor.callback).call(scope, v)).to.equal(defValue);
-  expect(scope[prop]).to.equal(defValue);
-  expect(interceptor.getIntercepted()).to.equal(undefined);
-});
+[
+// defaultVal instanceCheck allowNull testVal    expectVal  expectIntrVal
+  [MOCK_SO_1, null,         false,    null,      MOCK_SO_1, undefined],
+  [null,      null,         false,    null,      null,      undefined],
+  [MOCK_SO_1, null,         true,     null,      null,      null],
+  [MOCK_SO_1, Object,       false,    MOCK_SO_2, MOCK_SO_2, MOCK_SO_2],
+  [MOCK_SO_1, Date,         false,    MOCK_SO_3, MOCK_SO_1, undefined],
+  [MOCK_SO_1, Number,       false,    Infinity,  MOCK_SO_1, undefined],
+  [MOCK_SO_1, Number,       false,    NaN,       MOCK_SO_1, undefined],
+  [MOCK_SO_1, Date,         false,    MOCK_SO_4, MOCK_SO_4, MOCK_SO_4]
+].forEach(setterTestIterator(utils.setterObject));
 
 // TFN: setterFunction
 console.log('Testing: setterFunction..');
 
-[utils.noop, utils.noopPassThru, Date, Array, Object].forEach(function (v) { // all-function conditions
-  var prop = 'test', scope = {}, interceptor = setterInterceptor();
-  expect(utils.setterFunction(prop, false, interceptor.callback).call(scope, v)).to.equal(v);
-  expect(scope[prop]).to.equal(v);
-  expect(interceptor.getIntercepted()).to.equal(v);
-});
+[
+// defaultVal  allowNull testVal             expectVal           expectIntrVal
+  [utils.noop, false,    null,               utils.noop,         undefined],
+  [null,       false,    null,               null,               undefined],
+  [utils.noop, false,    utils.noopPassThru, utils.noopPassThru, utils.noopPassThru],
+  [utils.noop, true,     null,               null,               null],
+  [utils.noop, false,    null,               utils.noop,         undefined],
+  [utils.noop, false,    Infinity,           utils.noop,         undefined],
+  [utils.noop, false,    Date,               Date,               Date],
+  [utils.noop, false,    Array,              Array,              Array],
+  [utils.noop, false,    Object,             Object,             Object]
+].forEach(setterTestIterator(utils.setterFunction));
 
-[utils.noop, utils.noopPassThru, Date, Array, Object, null].forEach(function (v) { // all-function conditions including null
-  var prop = 'test', scope = {}, interceptor = setterInterceptor();
-  expect(utils.setterFunction(prop, true, interceptor.callback).call(scope, v)).to.equal(v);
-  expect(scope[prop]).to.equal(v);
-  expect(interceptor.getIntercepted()).to.equal(v);
-});
+// TFN: setterEnum
+console.log('Testing: setterEnum..');
 
-[null, undefined, NaN, new Date, new Array, new Object].forEach(function (v) { // blocked conditions
-  var
-  prop = 'test', scope = {}, defValue = utils.noop, interceptor = setterInterceptor();
-  scope[prop] = defValue;
-  expect(utils.setterFunction(prop, false, interceptor.callback).call(scope, v)).to.equal(defValue);
-  expect(scope[prop]).to.equal(defValue);
-  expect(interceptor.getIntercepted()).to.equal(undefined);
-});
+[
+// defaultVal  enumerables        allowNull   testVal      expectVal  expectIntrVal
+  [null,       [1, 2, 3],         false,      1,           1,         1],
+  [null,       [1, 2, 3],         true,       null,        null,      null],
+  [1,          [1, 2, 3],         false,      null,        1,         undefined],
+  [null,       [true, false],     false,      false,       false,     false],
+  [null,       [true, false],     false,      NaN,         null,      undefined],
+  [null,       [true, false],     false,      Infinity,    null,      undefined],
+  [false,      [true, false],     false,      Infinity,    false,     undefined],
+  [true,       [true, false],     false,      Infinity,    true,      undefined]
+].forEach(setterTestIterator(utils.setterEnum));
 
 // TFN: setterDate
 console.log('Testing: setterDate..');
 
+var
+MOCK_SD_BS = new Date(2000,  0,  1,  0,  0,  0,   0),
+MOCK_SD_BE = new Date(2000, 11, 31, 23, 59, 59, 999),
+MOCK_SD_D1 = new Date(2000,  0,  1,  0,  0,  0,   1),
+MOCK_SD_D2 = new Date(2000,  0,  1, 23, 59, 59, 998),
+MOCK_SD_D3 = new Date(1999, 11, 31, 23, 59, 59, 999),
+MOCK_SD_D4 = new Date(2001,  0,  1,  0,  0,  0,   0),
+MOCK_SD_D5 = new Date(2000,  6, 12, 12, 15, 23, 347),
+MOCK_SD_S1 = '2000-01-01 00:00:00.001',
+MOCK_SD_S2 = '2000-01-01 23:59:59.998',
+MOCK_SD_S3 = '1999-12-31 23:59:59.999',
+MOCK_SD_S4 = '2001-01-01 00:00:00.000',
+MOCK_SD_S5 = '2000-07-12 12:15:23.347';
+
 [
-  // string interpolation tests
-  ['2000-01-01 00:00:00',                   null,                               null,                                new Date(2000, 0, 1,  0, 0, 0, 0)],
-  ['2000-01-01 12:00:00',                   null,                               null,                                new Date(2000, 0, 1, 12, 0, 0, 0)],
-  ['2000-01-01 23:59:59.999',               null,                               null,                                new Date(2000, 0, 1, 23, 59, 59, 999)],
-
-  // no boundary tests
-  [new Date(2000, 0, 1, 0, 0, 0, 0),        null,                               null,                                new Date(2000, 0, 1, 0, 0, 0, 0)],
-
-  // minimum boundary tests
-  [new Date(2000, 0, 1, 0, 0, 0, 0),        new Date(2000, 0, 1, 0, 0, 0, 0),   null,                                new Date(2000, 0, 1, 0, 0, 0, 0)],
-  [new Date(2001, 0, 1, 0, 0, 0, 0),        new Date(2000, 0, 1, 0, 0, 0, 0),   null,                                new Date(2001, 0, 1, 0, 0, 0, 0)],
-  [new Date(1999, 11, 31, 23, 59, 59, 999), new Date(2000, 0, 1, 0, 0, 0, 0),   null,                                new Date(2000, 0, 1, 0, 0, 0, 0)],
-
-  // maximum boundary tests
-  [new Date(2000, 0, 1, 0, 0, 0, 0),        null,                               new Date(1980, 0, 1, 0, 0, 0, 0),    new Date(1980, 0, 1, 0, 0, 0, 0)],
-  [new Date(2020, 0, 1, 0, 0, 0, 0),        null,                               new Date(2010, 0, 1, 0, 0, 0, 1),    new Date(2010, 0, 1, 0, 0, 0, 1)],
-  [new Date(1980, 0, 1, 0, 0, 0, 0),        null,                               new Date(2000, 0, 1, 0, 0, 0, 0),    new Date(1980, 0, 1, 0, 0, 0, 0)],
-
-  // maximum and minimum boundary tests
-  [new Date(1970, 0, 1, 0, 0, 0, 0),        new Date(1980, 0, 1, 0, 0, 0, 0),   new Date(1980, 0, 1, 5, 0, 0, 0),    new Date(1980, 0, 1, 0, 0, 0, 0)],
-  [new Date(1980, 0, 1, 3, 0, 0, 0),        new Date(1980, 0, 1, 0, 0, 0, 0),   new Date(1980, 0, 1, 5, 0, 0, 0),    new Date(1980, 0, 1, 3, 0, 0, 0)],
-  [new Date(1990, 0, 1, 0, 0, 0, 0),        new Date(1980, 0, 1, 0, 0, 0, 0),   new Date(1980, 0, 1, 5, 0, 0, 0),    new Date(1980, 0, 1, 5, 0, 0, 0)]
-
-].forEach(function (test) {
-  var
-  prop = 'test', scope = {}, interceptor = setterInterceptor();
-  scope[prop] = null;
-  expect(utils.setterDate(prop, test[1], test[2], false, interceptor.callback).call(scope, test[0]).toISOString()).to.equal(test[3].toISOString());
-  expect(scope[prop].toISOString()).to.equal(test[3].toISOString());
-  expect(interceptor.getIntercepted().toISOString()).to.equal(test[3].toISOString());
-});
+// defaultVal  min         max         allowNull testVal     expectVal   expectIntrVal
+  [MOCK_SD_D1, null,       null,       false,    null,       MOCK_SD_D1, undefined],
+  [MOCK_SD_D1, null,       null,       true,     null,       null,       null],
+  [null,       null,       null,       false,    null,       null,       undefined],
+  [null,       null,       null,       false,    false,      null,       undefined],
+  [null,       null,       null,       false,    true,       null,       undefined],
+  [null,       null,       null,       false,    Infinity,   null,       undefined],
+  [null,       null,       null,       false,    NaN,        null,       undefined],
+  [null,       MOCK_SD_BS, null,       false,    MOCK_SD_BS, MOCK_SD_BS, MOCK_SD_BS],
+  [null,       null,       MOCK_SD_BE, false,    MOCK_SD_BE, MOCK_SD_BE, MOCK_SD_BE],
+  [null,       MOCK_SD_BS, MOCK_SD_BE, false,    MOCK_SD_D1, MOCK_SD_D1, MOCK_SD_D1],
+  [null,       MOCK_SD_BS, MOCK_SD_BE, false,    MOCK_SD_S1, MOCK_SD_D1, MOCK_SD_D1],
+  [null,       MOCK_SD_BS, MOCK_SD_BE, false,    MOCK_SD_D2, MOCK_SD_D2, MOCK_SD_D2],
+  [null,       MOCK_SD_BS, MOCK_SD_BE, false,    MOCK_SD_S2, MOCK_SD_D2, MOCK_SD_D2],
+  [null,       MOCK_SD_BS, MOCK_SD_BE, false,    MOCK_SD_D5, MOCK_SD_D5, MOCK_SD_D5],
+  [null,       MOCK_SD_BS, MOCK_SD_BE, false,    MOCK_SD_S5, MOCK_SD_D5, MOCK_SD_D5],
+  [null,       MOCK_SD_BS, MOCK_SD_BE, false,    MOCK_SD_D3, MOCK_SD_BS, MOCK_SD_BS],
+  [null,       MOCK_SD_BS, MOCK_SD_BE, false,    MOCK_SD_S3, MOCK_SD_BS, MOCK_SD_BS],
+  [null,       MOCK_SD_BS, MOCK_SD_BE, false,    MOCK_SD_S4, MOCK_SD_BE, MOCK_SD_BE],
+  [null,       MOCK_SD_BS, MOCK_SD_BE, false,    MOCK_SD_S4, MOCK_SD_BE, MOCK_SD_BE]
+].forEach(setterTestIterator(utils.setterDate, function (v) {
+  if(!utils.isDate(v)) return v;
+  return v.toISOString();
+}));
 
 // test readme examples
 console.log('Testing: Example (MyValue)..');
