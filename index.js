@@ -516,6 +516,21 @@
     });
   }
 
+  function setterPlainObject(prop, allowNull, cb) {
+    cb = cb || noopPassThru;
+    return setter(prop, allowNull, function (v) {
+      if(allowNull && isNull(v)) {
+        return cb.call(this, v);
+      }
+
+      if(isPlainObject(v)) {
+        return cb.call(this, v);
+      }
+
+      return this[prop];
+    });
+  }
+
   function setterEnum(prop, enumerables, allowNull, cb) {
     cb = cb || noopPassThru;
 
@@ -613,6 +628,7 @@
     setterString: setterString,
     setterScalar: setterScalar,
     setterObject: setterObject,
+    setterPlainObject: setterPlainObject,
     setterFunction: setterFunction,
     setterEnum: setterEnum,
     setterDate: setterDate

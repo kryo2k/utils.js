@@ -958,6 +958,27 @@ MOCK_SO_4 = new Date;
   [MOCK_SO_1, Date,         false,    MOCK_SO_4, MOCK_SO_4, MOCK_SO_4]
 ].forEach(setterTestIterator(utils.setterObject));
 
+// TFN: setterPlainObject
+console.log('Testing: setterPlainObject..');
+
+var
+MOCK_SPO_1 = {},
+MOCK_SPO_2 = {},
+MOCK_SPO_3 = { experimental: true },
+MOCK_SPO_4 = new Date;
+
+[
+// defaultVal  allowNull testVal     expectVal   expectIntrVal
+  [MOCK_SPO_1, false,    null,       MOCK_SPO_1, undefined],
+  [null,       false,    null,       null,       undefined],
+  [MOCK_SPO_1, true,     null,       null,       null],
+  [MOCK_SPO_1, false,    MOCK_SPO_2, MOCK_SPO_2, MOCK_SPO_2],
+  [MOCK_SPO_1, false,    MOCK_SPO_3, MOCK_SPO_3, MOCK_SPO_3],
+  [MOCK_SPO_1, false,    Infinity,   MOCK_SPO_1, undefined],
+  [MOCK_SPO_1, false,    NaN,        MOCK_SPO_1, undefined],
+  [MOCK_SPO_1, false,    MOCK_SPO_4, MOCK_SPO_1, undefined]
+].forEach(setterTestIterator(utils.setterPlainObject));
+
 // TFN: setterFunction
 console.log('Testing: setterFunction..');
 
