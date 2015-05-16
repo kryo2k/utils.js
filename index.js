@@ -56,12 +56,22 @@
     return str === 'object';
   }
 
-  function isObject(v) { // matches all types of objects
-    return !isNull(v) && isObjectType(typeof v);
+  function isObject(v, instanceCheck) { // matches all types of objects, unless instanceCheck is provided a function.
+
+    var
+    result = !isNull(v) && isObjectType(typeof v);
+
+    if(result && isFunction(instanceCheck)) { // enfore instanceof checking
+      if(false === v instanceof instanceCheck) {
+        result = false;
+      }
+    }
+
+    return result;
   }
 
   function isDate(v) { // matches only Date object instances
-    return isObject(v) && v instanceof Date;
+    return isObject(v, Date);
   }
 
   function asNumber(v, defaultVal) {
@@ -499,16 +509,7 @@
         return cb.call(this, v);
       }
 
-      if(isObject(v)) {
-        if(isFunction(instanceCheck)) { // enfore instanceof checking
-          if(v instanceof instanceCheck) {
-            return cb.call(this, v);
-          }
-          else {
-            return this[prop];
-          }
-        }
-
+      if(isObject(v, instanceCheck)) {
         return cb.call(this, v);
       }
 

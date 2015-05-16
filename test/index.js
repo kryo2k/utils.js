@@ -355,6 +355,14 @@ expect([ // test false conditions
 ].map(utils.isObject))
   .to.not.contain(true);
 
+expect([ // test instanceOf conditions
+  [new Object, Object],
+  [new Date, Date],
+  [new Array, Array]
+].map(function (test) {
+  return utils.isObject(test[0], test[1]);
+})).to.not.contain(false);
+
 // TFN: asNumber
 console.log('Testing: asNumber..');
 

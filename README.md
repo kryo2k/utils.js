@@ -51,7 +51,7 @@ utils = window.utilities;
 | isPrimitive       | (variable) | Identical to isScalar(), but permits undefined. |
 | isPlainObject     | (variable) | Checks if a variable is strictly an instance of Object (or {}). Complex objects (Date, Array) will fail check. |
 | isObjectType      | (string)   | Checks a string if it matches the native object type string ```"object"```.
-| isObject          | (variable) | Checks if a variable is any type of object (plain, or otherwise). |
+| isObject          | (variable, instanceOf) | Checks if a variable is any type of object (plain, or otherwise). Optionally can provide a constructor function to instanceOf, and will further check if the object is an instance of that constructor. |
 | isDate            | (variable) | Checks if a variable is specifically a Date object. |
 | asNumber          | (variable, default) | Returns a variable in it's numeric form, or returns the supplied default (if a number is provided, else zero) if not a valid string or number. |
 | asBoolean         | (variable, default) | Returns variable as a strict boolean type. If variable is ```null``` or ```undefined``` it will return the default value if it is a boolean, otherwise returns ```false```. If variable is an integer, it must equal exactly ```1``` to return ```true```, otherwise returns ```false```. If variable is a string, it must be one of (```yes```, ```true```, ```1```, ```on```, ```enabled```, ```enable```) to return ```true```, otherwise returns ```false```. If none of the above cases match, it will return default value (or ```false```). |
