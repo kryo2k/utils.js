@@ -2,7 +2,7 @@
 ** Utilities.js
 ** @author Hans Doller <kryo2k@gmail.com>
 **/
-;(function (undefined) {'use strict';
+;(function (undefined) { 'use strict';
 
   var
   noop = function () {},
@@ -30,6 +30,14 @@
 
   function isNumber(v) {
     return !isNaN(v) && typeof(v) === 'number';
+  }
+
+  function isNumberBetween(v, n1, n2) {
+    if(!isNumber(v) || !isNumber(n1) || !isNumber(n2))  {
+      return false;
+    }
+
+    return v >= Math.min(n1, n2) && v <= Math.max(n1, n2);
   }
 
   function isScalar(v) {
@@ -72,6 +80,14 @@
 
   function isDate(v) { // matches only Date object instances
     return isObject(v, Date);
+  }
+
+  function isDateBetween(v, d1, d2) {
+    if(!isDate(v) || !isDate(d1) || !isDate(d2))  {
+      return false;
+    }
+
+    return isNumberBetween(+v,+d1,+d2);
   }
 
   function asNumber(v, defaultVal) {
@@ -140,9 +156,8 @@
       }
     }
 
-    return isDate(v)
-      ? new Date(+v) // send back a copy, if already a date object!
-      : false;
+    // send back a copy, if already a date object. Otherwise, send back false.
+    return isDate(v) ? new Date(+v) : false;
   }
 
   function dateNow(now, fallback) {
@@ -150,21 +165,45 @@
     return dateParse(now) || fallback;
   }
 
+  function dateSameYear(d1, d2) {
+    if(!isDate(d1) || !isDate(d2)) {
+      return false;
+    }
+
+    return d1.getFullYear() === d2.getFullYear();
+  }
+
+  function dateSameMonth(d1, d2) {
+    return dateSameYear(d1, d2) && d1.getMonth() === d2.getMonth();
+  }
+
+  function dateSameDay(d1, d2) {
+    return dateSameMonth(d1, d2) && d1.getDate() === d2.getDate();
+  }
+
+  function dateSameHour(d1, d2) {
+    return dateSameDay(d1, d2) && d1.getHours() === d2.getHours();
+  }
+
+  function dateSameMinute(d1, d2) {
+    return dateSameHour(d1, d2) && d1.getMinutes() === d2.getMinutes();
+  }
+
+  function dateSameSecond(d1, d2) {
+    return dateSameMinute(d1, d2) && d1.getSeconds() === d2.getSeconds();
+  }
+
+  function dateSameMs(d1, d2) {
+    return dateSameSecond(d1, d2) && d1.getMilliseconds() === d2.getMilliseconds();
+  }
+
   function dateEquals(d1, d2, fallback) {
     if(isNullUndefined(d1) || isNullUndefined(d2)) {
       return false;
     }
 
-    d1 = dateNow(d1, fallback);
-    d2 = dateNow(d2, fallback);
-
-    // compare the dates by the elements that matter.
-    return d1.getFullYear()     === d2.getFullYear()
-        && d1.getMonth()        === d2.getMonth()
-        && d1.getDate()         === d2.getDate()
-        && d1.getMinutes()      === d2.getMinutes()
-        && d1.getSeconds()      === d2.getSeconds()
-        && d1.getMilliseconds() === d2.getMilliseconds();
+    // deep compare date
+    return dateSameMs(dateNow(d1, fallback), dateNow(d2, fallback));
   }
 
   function dateSetHours(now, hours, minutes, seconds, milliseconds, useUTC, fallback) {
@@ -182,15 +221,6 @@
 
   function dateCeil(now, useUTC, fallback) {
     return dateSetHours(now, 23, 59, 59, 999, useUTC, fallback);
-  }
-
-  function logZero(v, changeTo) {
-    if(!isNumber(v)) { return NaN; }
-    if(!isNumber(changeTo)) {
-      changeTo = 0.000001;
-    }
-
-    return v === 0 ? changeTo : v;
   }
 
   function round (v, precision) {
@@ -321,11 +351,7 @@
 
     if(isFunction(obj.has)) {
       var hasReturned = obj.has(property);
-      return isBoolean(hasReturned)
-        // we got a boolean back
-        ? hasReturned
-        // fall back to native
-        : obj.hasOwnProperty(property);
+      return isBoolean(hasReturned) ? hasReturned : obj.hasOwnProperty(property);
     }
 
     return obj.hasOwnProperty(property);
@@ -363,9 +389,7 @@
       return defaultValue;
     }
 
-    searchDelimiter = (searchDelimiter === undefined || searchDelimiter === true)
-      ? '.'
-      : searchDelimiter;
+    searchDelimiter = (searchDelimiter === undefined || searchDelimiter === true) ? '.' : searchDelimiter;
 
     var
     applyValue = defaultValue,
@@ -536,9 +560,7 @@
     cb = cb || noopPassThru;
 
     // always convert to array, even if null/undefined.
-    enumerables = isArray(enumerables)
-      ? enumerables
-      : [enumerables];
+    enumerables = isArray(enumerables) ? enumerables : [enumerables];
 
     return setter(prop, allowNull, function (v) {
       if(allowNull && isNull(v)) {
@@ -590,6 +612,7 @@
     isUndefined: isUndefined,
     isNullUndefined: isNullUndefined,
     isNumber: isNumber,
+    isNumberBetween: isNumberBetween,
     isBoolean: isBoolean,
     isString: isString,
     isScalar: isScalar,
@@ -600,6 +623,7 @@
     isObjectType: isObjectType,
     isObject: isObject,
     isDate: isDate,
+    isDateBetween: isDateBetween,
     asNumber: asNumber,
     asBoolean: asBoolean,
     asString: asString,
@@ -607,6 +631,13 @@
     dateParse: dateParse,
     dateNow: dateNow,
     dateSetHours: dateSetHours,
+    dateSameYear: dateSameYear,
+    dateSameMonth: dateSameMonth,
+    dateSameDay: dateSameDay,
+    dateSameHour: dateSameHour,
+    dateSameMinute: dateSameMinute,
+    dateSameSecond: dateSameSecond,
+    dateSameMs: dateSameMs,
     dateEquals: dateEquals,
     dateFloor: dateFloor,
     dateCeil: dateCeil,
@@ -695,4 +726,4 @@
     // Export for a browser or Rhino.
     root.utilities = utilities;
   }
-}.call(this));
+}).call(this);

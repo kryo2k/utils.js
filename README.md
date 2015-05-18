@@ -43,6 +43,7 @@ utils = window.utilities;
 | isUndefined       | (variable) | Checks if a variable is undefined. |
 | isNullUndefined   | (variable) | Checks if a variable is null or undefined. |
 | isNumber          | (variable) | Checks if a variable is strictly a number. |
+| isNumberBetween   | (number, number1, number2) | Checks if number is between number1 and number2. |
 | isBoolean         | (variable) | Checks if a variable is strictly a boolean. |
 | isString          | (variable) | Checks if a variable is strictly a string. |
 | isScalar          | (variable) | Checks if a variable is a scalar of type (number, boolean, string). NULL and Undefined are not permitted. |
@@ -53,6 +54,7 @@ utils = window.utilities;
 | isObjectType      | (string)   | Checks a string if it matches the native object type string ```"object"```.
 | isObject          | (variable, instanceOf) | Checks if a variable is any type of object (plain, or otherwise). Optionally can provide a constructor function to instanceOf, and will further check if the object is an instance of that constructor. |
 | isDate            | (variable) | Checks if a variable is specifically a Date object. |
+| isDateBetween     | (date, date1, date2) | Checks if date is between date1 and date2. |
 | asNumber          | (variable, default) | Returns a variable in it's numeric form, or returns the supplied default (if a number is provided, else zero) if not a valid string or number. |
 | asBoolean         | (variable, default) | Returns variable as a strict boolean type. If variable is ```null``` or ```undefined``` it will return the default value if it is a boolean, otherwise returns ```false```. If variable is an integer, it must equal exactly ```1``` to return ```true```, otherwise returns ```false```. If variable is a string, it must be one of (```yes```, ```true```, ```1```, ```on```, ```enabled```, ```enable```) to return ```true```, otherwise returns ```false```. If none of the above cases match, it will return default value (or ```false```). |
 | asString          | (variable, default) | Returns variable as a strict string type. If variable is ```null``` or ```undefined``` it will return the default value if it is a string, otherwise returns ```""```. If variable is already a string, it returns the original string. Otherwise variable is cast directly to a string, using the native ```String(variable)```. |
@@ -60,6 +62,13 @@ utils = window.utilities;
 | dateSetHours      | (now, hours, minutes, seconds, milliseconds, useUTC, fallbackDate) | Sets the hour portion of a date. Returns a new copy of the ```now``` after interpolation date. If ```now``` could not be loaded, the fallbackDate is used for setting hours. *Warning, no copy is made of the fallbackDate if used, this operation will change it's internal values.* |
 | dateParse         | (variable) | Attempts to load variable as a date. If variable is already a real date object, it returns a copy of this object. If variable is a finite number or a string, it attempts to load it as a real date using native Date functions. If parsing was successful, the newly interpolated copy is returned. If the load was unsuccessful, this function returns ```false```. |
 | dateNow           | (variable, fallbackDate) | If variable is a real date object, it returns a new copy of the date object. In any other case, it will attempt to parse the variable into a date. If parse was successful, it will return the interpolated copy. If unsuccessful, it will return the same instance of fallbackDate (if it is a real date object, or a new Date if otherwise). |
+| dateSameYear      | (date1, date2) | Compares two dates by year. If either of the params aren't dates, this function returns ```false```. |
+| dateSameMonth     | (date1, date2) | Compares two dates by year, month. If either of the params aren't dates, this function returns ```false```. |
+| dateSameDay       | (date1, date2) | Compares two dates by year, month, day. If either of the params aren't dates, this function returns ```false```. |
+| dateSameHour      | (date1, date2) | Compares two dates by year, month, day, hour. If either of the params aren't dates, this function returns ```false```. |
+| dateSameMinute    | (date1, date2) | Compares two dates by year, month, day, hour, minute. If either of the params aren't dates, this function returns ```false```. |
+| dateSameSecond    | (date1, date2) | Compares two dates by year, month, day, hour, minute, second. If either of the params aren't dates, this function returns ```false```. |
+| dateSameMs        | (date1, date2) | Compares two dates by year, month, day, hour, minute, second, millisecond. If either of the params aren't dates, this function returns ```false```. |
 | dateEquals        | (date1, date2, fallbackDate)) | Compares value of date1 with date2 value to see if they match. This was not meant to detect if they are the exact same object instance, only that the values are equal. If either of the dates are ```NULL``` or ```undefined``` the function returns ```false```. If they could not be loaded (invalid String, Number, etc), the fallbackDate (or a new Date) is used in determining equality. |
 | dateFloor         | (now, useUTC, fallbackDate) | Returns a copy of ```now``` with the time set to be the beginning of the day (example: "00:00:00.000"). *See above note about using fallbackDate if now fails to load.* |
 | dateCeil          | (now, useUTC, fallbackDate) | Returns a copy of ```now``` with the time set to be the end of the day (example: "23:59:59.999"). *See above note about using fallbackDate if now fails to load.* |
