@@ -1004,6 +1004,18 @@ expect(utils.range(1, 5, 1)).to.eql([1, 2, 3, 4, 5]);
 expect(utils.range(0, 6, 2)).to.eql([0, 2, 4, 6]);
 expect(utils.range(0, 1, 0.25, 2)).to.eql([0, 0.25, 0.5, 0.75, 1]);
 
+// TFN: chunkString
+console.log('Testing: chunkString..');
+
+expect(utils.chunkString(null, null)).to.eql([]);
+expect(utils.chunkString("", 5)).to.eql([]);
+expect(utils.chunkString("12345678", null)).to.eql([]);
+expect(utils.chunkString("1234    ", 0)).to.eql(['1','2','3','4',' ',' ',' ',' ']);
+expect(utils.chunkString("12345678", 2)).to.eql(['12','34','56','78']);
+expect(utils.chunkString("12345678", 4)).to.eql(['1234','5678']);
+expect(utils.chunkString("12345678", 8)).to.eql(['12345678']);
+expect(utils.chunkString("12345678", 100)).to.eql(['12345678']);
+
 // TFN: objectHasProperty
 console.log('Testing: objectHasProperty..');
 
