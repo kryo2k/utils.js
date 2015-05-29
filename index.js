@@ -403,14 +403,14 @@
     return v;
   }
 
-  function randomPluck(array, items) {
+  function randomPluck(array, items, alwaysArray) {
     if(!isArray(array)) {
       return false;
     }
 
     items = clamp(asNumber(items, 1), 1);
 
-    if(items === 1) {
+    if(items === 1 && !alwaysArray) {
       return array[Math.floor(Math.random()*array.length)]
     }
     else {

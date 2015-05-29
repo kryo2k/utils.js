@@ -81,7 +81,7 @@ utils = window.utilities;
 | shuffle           | (array) | Performs a shuffle in place on an array. |
 | shuffleCopy       | (array) | Performs a shuffle on a copy of on an array. |
 | random            | (min, max, precision) | Produces a random number between a certain range with an optional precision. |
-| randomPluck       | (array, count) | Returns a random element from an array. If count > 1, then the function returns an array of random items from the source array. |
+| randomPluck       | (array, count, alwaysArray) | Returns a random element from an array. If count > 1, then the function returns an array of random items from the source array. |
 | range             | (from, to, step, precision) | Produce an array of integers within a certain range. Optional step size, and precision. |
 | objectHasProperty | (obj, property) | Virtually the same as ```Object.hasOwnProperty```, but checks to see if object has a ```has(property)``` function. If it does, it calls it and checks if the result is a boolean. If so, returns the boolean, otherwise in all cases falls back to the native hasOwnProperty method. If obj is not an object, returns ```false```. This function is compatible with ```HashMap``` style objects. |
 | objectGetValue    | (obj, property, defaultValue) | Gets a single object property value, with the option of providing a default value which is returned if the ```objectHasProperty```  check fails. This function also checks to see if a ```get(property)``` method exists. If so, it calls that function and returns it's value. Otherwise, falls back to returning the object's property using native JS. This function is compatible with ```HashMap``` style objects. |
