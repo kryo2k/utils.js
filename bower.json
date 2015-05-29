@@ -1,7 +1,7 @@
 {
   "name": "utilities.js",
   "main": "index.js",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "homepage": "https://github.com/kryo2k/utils.js",
   "authors": [
     "Hans Doller <kryo2k@gmail.com>"

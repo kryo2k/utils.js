@@ -404,7 +404,7 @@
   }
 
   function randomPluck(arr, items) {
-    if(!isArray(shuffle)) {
+    if(!isArray(arr)) {
       return false;
     }
 
