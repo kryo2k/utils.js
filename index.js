@@ -366,7 +366,7 @@
   }
 
   function shuffle(array) { // performs a shuffle in place
-    if(!isArray(shuffle)) {
+    if(!isArray(array)) {
       return false;
     }
 
@@ -383,7 +383,7 @@
   }
 
   function shuffledCopy(array) {
-    if(!isArray(shuffle)) {
+    if(!isArray(array)) {
       return false;
     }
     return shuffle(array.slice());
@@ -403,18 +403,18 @@
     return v;
   }
 
-  function randomPluck(arr, items) {
-    if(!isArray(arr)) {
+  function randomPluck(array, items) {
+    if(!isArray(array)) {
       return false;
     }
 
     items = clamp(asNumber(items, 1), 1);
 
     if(items === 1) {
-      return arr[Math.floor(Math.random()*arr.length)]
+      return array[Math.floor(Math.random()*array.length)]
     }
     else {
-      return shuffledCopy(arr).slice(0, items);
+      return shuffledCopy(array).slice(0, items);
     }
   }
 
