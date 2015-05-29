@@ -72,17 +72,22 @@ utils = window.utilities;
 | dateEquals        | (date1, date2, fallbackDate)) | Compares value of date1 with date2 value to see if they match. This was not meant to detect if they are the exact same object instance, only that the values are equal. If either of the dates are ```NULL``` or ```undefined``` the function returns ```false```. If they could not be loaded (invalid String, Number, etc), the fallbackDate (or a new Date) is used in determining equality. |
 | dateFloor         | (now, useUTC, fallbackDate) | Returns a copy of ```now``` with the time set to be the beginning of the day (example: "00:00:00.000"). *See above note about using fallbackDate if now fails to load.* |
 | dateCeil          | (now, useUTC, fallbackDate) | Returns a copy of ```now``` with the time set to be the end of the day (example: "23:59:59.999"). *See above note about using fallbackDate if now fails to load.* |
+| extend             | ([deep,] obj[, ob1, ...]) | A port of jQuery's extend function. |
 | round             | (number, precision) | Rounding function, with optional precision. Returns NaN if not a valid number. |
 | clamp             | (number, min, max, precision) | Ensures a number is between a certain range with an optional precision. |
 | clampDate         | (date, min, max) | Ensures a date is between a certain range. If date is not a real date object, function returns ```false```. Min and Max are only used if they are real date objects, otherwise range is not capped by that limit. This function ALWAYS returns a copy of the original date when conditions are successful. |
 | logscale          | (n, nMin, nMax, vMin, vMax, precision) | Scales a number logarithmically. |
 | linearscale       | (n, nMin, nMax, vMin, vMax, precision) | Scales a number linearlly. |
+| shuffle           | (array) | Performs a shuffle in place on an array. |
+| shuffleCopy       | (array) | Performs a shuffle on a copy of on an array. |
 | random            | (min, max, precision) | Produces a random number between a certain range with an optional precision. |
+| randomPluck       | (array, count) | Returns a random element from an array. If count > 1, then the function returns an array of random items from the source array. |
 | range             | (from, to, step, precision) | Produce an array of integers within a certain range. Optional step size, and precision. |
 | objectHasProperty | (obj, property) | Virtually the same as ```Object.hasOwnProperty```, but checks to see if object has a ```has(property)``` function. If it does, it calls it and checks if the result is a boolean. If so, returns the boolean, otherwise in all cases falls back to the native hasOwnProperty method. If obj is not an object, returns ```false```. This function is compatible with ```HashMap``` style objects. |
 | objectGetValue    | (obj, property, defaultValue) | Gets a single object property value, with the option of providing a default value which is returned if the ```objectHasProperty```  check fails. This function also checks to see if a ```get(property)``` method exists. If so, it calls that function and returns it's value. Otherwise, falls back to returning the object's property using native JS. This function is compatible with ```HashMap``` style objects. |
 | objectSetValue    | (obj, property, value, rejectOverride) | Sets a single object property value, with the option of skipping the update if already set. Overriding is allowed by default, to disable set rejectOverride to ```true```. This function is compatible with ```HashMap``` style objects. |
 | objectFind        | (obj, search, defaultValue, searchDelimiter) | Similar to the objectGetValue function, but search can be defined as a delimited string, or as an array. This search acts like a property path to find an object's value or the value of one of it's child keys. To disable deep searching on string keys, set searchDelimiter to ```false```.  The default searchDelimiter is a period (```.```) character. This function is compatible with ```HashMap``` style objects. |
+| fallbackNull      | (value) | If a value is null or undefined, returns null otherwise returns the original value. |
 | getter            | (property, getterFn) | Returns a getter function. See more detail below. |
 | setter            | (property, allowNull, setterFn) | Returns a setter function. ^ ditto. |
 | setterBoolean     | (property, allowNull, setterFn) | Returns a boolean setter function. If value passed to function is not a boolean, property does not get set in scope. |

@@ -919,6 +919,24 @@ console.log('Testing: dateCeil..');
 });
 
 // TFN: round
+console.log('Testing: extend..');
+
+// shallow tests
+expect(utils.extend({ test : true })).to.eql({ test : true });
+expect(utils.extend({ test : false }, { test: true })).to.eql({ test: true });
+expect(utils.extend({ test : { test: false } }, { test: { test: true } })).to.eql({ test: { test: true } });
+expect(utils.extend({ test : null }, { test: { test: true } })).to.eql({ test: { test: true } });
+expect(utils.extend({ test : { test1: false } }, { test: { test2: true } })).to.eql({ test: { test2: true } });
+expect(utils.extend({ test : { test1: false } }, { test: { test2: true } }, { test2: true })).to.eql({ test: { test2: true }, test2: true });
+
+// deep tests
+expect(utils.extend(false, { test : true })).to.eql({ test : true });
+expect(utils.extend(false, { test : { test1: false } }, { test: { test2: true } })).to.eql({ test: { test2: true } });
+expect(utils.extend(true,  { test : true })).to.eql({ test : true });
+expect(utils.extend(true,  { test : { test1: false } }, { test: { test2: true } })).to.eql({ test: { test1: false, test2: true } });
+expect(utils.extend(true,  { test : { test1: false } }, { test: { test1: true, test2: true } })).to.eql({ test: { test1: true, test2: true } });
+
+// TFN: round
 console.log('Testing: round..');
 
 expect(utils.round()).to.be.nan();

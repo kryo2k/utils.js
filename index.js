@@ -223,6 +223,72 @@
     return dateSetHours(now, 23, 59, 59, 999, useUTC, fallback);
   }
 
+  function extend() { // based on jquery's implementation (https://github.com/jquery/jquery/blob/master/src/core.js)
+    var
+    options, name, src, copy, copyIsArray, clone,
+    target = arguments[0] || {}, i = 1,
+    length = arguments.length,
+    deep   = false;
+
+    if ( isBoolean(target) ) {
+      deep = target;
+
+      // Skip the boolean and the target
+      target = arguments[ i ] || {};
+      i++;
+    }
+
+    // Handle case when target is a string or something (possible in deep copy)
+    if ( !isObjectType(typeof target) && !isFunction(target) ) {
+      target = {};
+    }
+
+    if(i === length) { // if nothing more to do, return current target
+      return target;
+    }
+
+    for ( ; i < length; i++ ) {
+      options = arguments[ i ];
+
+      if( isNullUndefined(options) ) {
+        continue; // Only deal with non-null/undefined values
+      }
+
+      // Extend the base object
+      for ( name in options ) {
+        src  = target[ name ];
+        copy = options[ name ];
+
+        // Prevent never-ending loop
+        if ( target === copy ) {
+          continue;
+        }
+
+        // Recurse if we're merging plain objects or arrays
+        if ( deep && copy && (isPlainObject(copy) || (copyIsArray = isArray(copy))) ) {
+
+          if ( copyIsArray ) {
+            copyIsArray = false;
+            clone = src && isArray(src) ? src : [];
+
+          } else {
+            clone = src && isPlainObject(src) ? src : {};
+          }
+
+          // Never move original objects, clone them
+          target[ name ] = extend( deep, clone, copy );
+
+        // Don't bring in undefined values
+        } else if ( copy !== undefined ) {
+          target[ name ] = copy;
+        }
+      }
+    }
+
+    // Return the modified object
+    return target;
+  };
+
   function round (v, precision) {
     if(!isNumber(v)) { return NaN; }
 
@@ -299,6 +365,30 @@
     return clamp(v, vMin, vMax, precision);
   }
 
+  function shuffle(array) { // performs a shuffle in place
+    if(!isArray(shuffle)) {
+      return false;
+    }
+
+    var currentIndex = array.length, temporaryValue, randomIndex;
+    while (0 !== currentIndex) {
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex -= 1;
+      temporaryValue = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = temporaryValue;
+    }
+
+    return array;
+  }
+
+  function shuffledCopy(array) {
+    if(!isArray(shuffle)) {
+      return false;
+    }
+    return shuffle(array.slice());
+  }
+
   function random(min, max, precision) {
     min = asNumber(min, 0);
     max = asNumber(max, 1);
@@ -311,6 +401,21 @@
     }
 
     return v;
+  }
+
+  function randomPluck(arr, items) {
+    if(!isArray(shuffle)) {
+      return false;
+    }
+
+    items = clamp(asNumber(items, 1), 1);
+
+    if(items === 1) {
+      return arr[Math.floor(Math.random()*arr.length)]
+    }
+    else {
+      return shuffledCopy(arr).slice(0, items);
+    }
   }
 
   function range(from, to, step, precision) {
@@ -464,10 +569,14 @@
     };
   }
 
+  function fallbackNull(v) {
+    return isNullUndefined(v) ? null : v;
+  }
+
   function setter(prop, allowNull, cb) {
     cb = cb || noopPassThru;
     return function (v) {
-      if(!allowNull && isNull(v)) {
+      if(!allowNull && isNull(fallbackNull(v))) {
         return this[prop];
       }
 
@@ -480,7 +589,7 @@
   function setterBoolean(prop, allowNull, cb) { // strictly set booleans
     cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
-      if(isBoolean(v) || (!!allowNull && isNull(v))) {
+      if(isBoolean(v) || (!!allowNull && isNull(fallbackNull(v)))) {
         return cb.call(this, v);
       }
 
@@ -491,7 +600,7 @@
   function setterNumber(prop, min, max, precision, allowInfinite, allowNull, cb) {
     cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
-      if(allowNull && isNull(v)) {
+      if(allowNull && isNull(fallbackNull(v))) {
         return cb.call(this, v);
       }
 
@@ -514,7 +623,7 @@
   function setterString(prop, allowNull, cb) {
     cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
-      if(isString(v) || (allowNull && isNull(v))) {
+      if(isString(v) || (allowNull && isNull(fallbackNull(v)))) {
         return cb.call(this, v);
       }
 
@@ -525,7 +634,7 @@
   function setterScalar(prop, allowNull, cb) {
     cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
-      if(isScalar(v) || (allowNull && isNull(v))) {
+      if(isScalar(v) || (allowNull && isNull(fallbackNull(v)))) {
         return cb.call(this, v);
       }
 
@@ -536,7 +645,7 @@
   function setterFunction(prop, allowNull, cb) {
     cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
-      if(isFunction(v) || (allowNull && isNull(v))) {
+      if(isFunction(v) || (allowNull && isNull(fallbackNull(v)))) {
         return cb.call(this, v);
       }
 
@@ -547,7 +656,7 @@
   function setterObject(prop, instanceCheck, allowNull, cb) {
     cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
-      if(allowNull && isNull(v)) {
+      if(allowNull && isNull(fallbackNull(v))) {
         return cb.call(this, v);
       }
 
@@ -562,7 +671,7 @@
   function setterPlainObject(prop, allowNull, cb) {
     cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
-      if(allowNull && isNull(v)) {
+      if(allowNull && isNull(fallbackNull(v))) {
         return cb.call(this, v);
       }
 
@@ -581,7 +690,7 @@
     enumerables = isArray(enumerables) ? enumerables : [enumerables];
 
     return setter(prop, allowNull, function (v) {
-      if(allowNull && isNull(v)) {
+      if(allowNull && isNull(fallbackNull(v))) {
         return cb.call(this, v);
       }
 
@@ -600,7 +709,7 @@
   function setterDate(prop, minDate, maxDate, allowNull, cb) {
     cb = cb || noopPassThru;
     return setter(prop, allowNull, function (v) {
-      if(allowNull && isNull(v)) {
+      if(allowNull && isNull(fallbackNull(v))) {
         return cb.call(this, v);
       }
 
@@ -659,18 +768,23 @@
     dateEquals: dateEquals,
     dateFloor: dateFloor,
     dateCeil: dateCeil,
+    extend: extend,
     round: round,
     clamp: clamp,
     clampDate: clampDate,
     logscale: logscale,
     linearscale: linearscale,
+    shuffle: shuffle,
+    shuffledCopy: shuffledCopy,
     random: random,
+    randomPluck: randomPluck,
     range: range,
     chunkString: chunkString,
     objectHasProperty: objectHasProperty,
     objectGetValue: objectGetValue,
     objectSetValue: objectSetValue,
     objectFind: objectFind,
+    fallbackNull: fallbackNull,
     getter: getter,
     setter: setter,
     setterBoolean: setterBoolean,
