@@ -1,6 +1,6 @@
 {
   "name": "utilities.js",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "A small collection of useful algorithms and type-checking functions.",
   "main": "index.js",
   "directories": {

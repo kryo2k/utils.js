@@ -389,6 +389,95 @@
     return shuffle(array.slice());
   }
 
+  function sorterNumber (reverse) {
+    return function (a, b) {
+      var
+      vA = asNumber(a, Number.MIN_VALUE),
+      vB = asNumber(b, Number.MIN_VALUE);
+      if(vA > vB) return !!reverse ? -1 :  1;
+      if(vA < vB) return !!reverse ?  1 : -1;
+      return 0;
+    };
+  }
+
+  function sorterArrayObject (spec) {
+    var
+    D_ASC   = 'asc',
+    D_DESC  = 'desc',
+    sorters = [],
+    pushSorter = function (prop, dir) {
+      if(dir !== D_ASC && dir !== D_DESC) return false;
+      sorters.push({ property: prop, direction: dir });
+      return true;
+    },
+    directionNorm = function (v) {
+      if(isString(v)) {
+        v = v.toLowerCase();
+        return (v==='-1'||v==='-'||v==='desc'||v==='dsc') ? D_DESC : D_ASC;
+      }
+      else if(isNumber(v)) {
+        return (v === -1) ? D_DESC : D_ASC;
+      }
+      return D_ASC;
+    },
+    stringSorterDef = function (str) {
+      if(!isString(spec)) {
+        return false;
+      }
+
+      str.split(/\s+/).forEach(function (part) {
+        var
+        dir = D_ASC, property;
+
+        if(['-','+'].indexOf(part[0]) > -1) {
+          dir = directionNorm(part[0]);
+          property = part.substring(1);
+        }
+        else if(/^[a-z0-9\._-]+\:/i.test(part)) {
+          var matches = part.match(/^([a-z0-9\._-]+)\:(.*)/);
+          property = matches[1];
+          dir      = directionNorm(matches[2]);
+        }
+        else {
+          property = part;
+        }
+
+        pushSorter(property, dir);
+      });
+
+      return true;
+    },
+    objectSorterDef = function (obj) {
+      if(!isPlainObject(obj)) {
+        return false;
+      }
+
+      Object.keys(obj).forEach(function (v) {
+        pushSorter(v, directionNorm(obj[v]));
+      });
+
+      return true;
+    };
+
+    if(!stringSorterDef(spec) && !objectSorterDef(spec)) {
+      throw new Error('Invalid sorter spec was provided.');
+    }
+
+    return function (a, b) {
+      var compare = 0, isAscending, vA, vB, property;
+      sorters.every(function (sortBy) {
+        property = sortBy.property;
+        isAscending = (sortBy.direction === D_ASC);
+        vA = objectFind(a, property, Number.MIN_VALUE);
+        vB = objectFind(b, property, Number.MIN_VALUE);
+        if(vA > vB) compare = isAscending ?  1 : -1;
+        if(vA < vB) compare = isAscending ? -1 :  1;
+        return compare === 0;
+      });
+      return compare;
+    };
+  }
+
   function random(min, max, precision) {
     min = asNumber(min, 0);
     max = asNumber(max, 1);
@@ -776,6 +865,8 @@
     linearscale: linearscale,
     shuffle: shuffle,
     shuffledCopy: shuffledCopy,
+    sorterNumber: sorterNumber,
+    sorterArrayObject: sorterArrayObject,
     random: random,
     randomPluck: randomPluck,
     range: range,

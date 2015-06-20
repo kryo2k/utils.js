@@ -80,6 +80,8 @@ utils = window.utilities;
 | linearscale       | (n, nMin, nMax, vMin, vMax, precision) | Scales a number linearlly. |
 | shuffle           | (array) | Performs a shuffle in place on an array. |
 | shuffleCopy       | (array) | Performs a shuffle on a copy of on an array. |
+| sorterNumber      | (reverse) | Returns a sort function for comparing numeric values. Setting reverse to true will sort the array in descendinig order. |
+| sorterArrayObject | (spec) | Returns a sort function for comparing object properties. Spec can be a String or an Object and compare multiple columns at once. Each column can be sorted in ascendng or descending order and supports dotted property notation for nested objects. Example spec string: "column1 column2.field1:-1 +column1.field2 column3:desc". The equivelent in object notation would be: { column1: 1, 'column2.field1': -1, 'column1.field2': 1, 'column3': 'desc'} |
 | random            | (min, max, precision) | Produces a random number between a certain range with an optional precision. |
 | randomPluck       | (array, count, alwaysArray) | Returns a random element from an array. If count > 1, then the function returns an array of random items from the source array. |
 | range             | (from, to, step, precision) | Produce an array of integers within a certain range. Optional step size, and precision. |
