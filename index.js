@@ -566,7 +566,8 @@
       return isBoolean(hasReturned) ? hasReturned : obj.hasOwnProperty(property);
     }
 
-    return obj.hasOwnProperty(property);
+    // this is a looser form of making sure a property is defined.
+    return typeof obj[property] !== 'undefined';
   }
 
   function objectGetValue(obj, property, defaultValue) {
