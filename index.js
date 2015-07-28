@@ -400,7 +400,11 @@
     };
   }
 
-  function sorterArrayObject (spec) {
+  function sorterArrayObject (spec, rawRecordFn) {
+    rawRecordFn = isFunction(rawRecordFn)
+      ? rawRecordFn
+      : noopPassThru;
+
     var
     D_ASC   = 'asc',
     D_DESC  = 'desc',
@@ -468,8 +472,8 @@
       sorters.every(function (sortBy) {
         property = sortBy.property;
         isAscending = (sortBy.direction === D_ASC);
-        vA = objectFind(a, property, Number.MIN_VALUE);
-        vB = objectFind(b, property, Number.MIN_VALUE);
+        vA = objectFind(rawRecordFn(a), property, Number.MIN_VALUE);
+        vB = objectFind(rawRecordFn(b), property, Number.MIN_VALUE);
         if(vA > vB) compare = isAscending ?  1 : -1;
         if(vA < vB) compare = isAscending ? -1 :  1;
         return compare === 0;
@@ -500,11 +504,19 @@
     items = clamp(asNumber(items, 1), 1);
 
     if(items === 1 && !alwaysArray) {
-      return array[Math.floor(Math.random()*array.length)]
+      return array[random(0, items.length - 1, 0)]
     }
     else {
       return shuffledCopy(array).slice(0, items);
     }
+  }
+
+  function randomDate(minAge, maxAge) {
+    // ...
+  }
+
+  function randomArray(minLength, maxLength, itemCreatorFn) {
+    // ...
   }
 
   function range(from, to, step, precision) {
